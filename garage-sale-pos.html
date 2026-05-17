@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>✦ Garage Sale POS ✦</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky:        #daeef8;
+      --sky-light:  #eef7fc;
+      --sky-deep:   #b8ddf0;
+      --sky-pale:   #f3fafd;
+      --ink:        #1c2f3a;
+      --ink2:       #4a6477;
+      --ink3:       #7ea3b8;
+      --teal:       #3a8fa8;
+      --teal-dark:  #2a6f85;
+      --blush:      #f0d8e2;
+      --rose:       #c97b97;
+      --butter:     #fdf3dc;
+      --gold:       #c8902a;
+      --mint:       #c8ecdf;
+      --sage:       #4a9470;
+      --border:     #aacfdf;
+      --border-lt:  #cce4ef;
+      --shadow-sm:  0 2px 8px rgba(28,47,58,0.10);
+      --shadow-md:  0 4px 20px rgba(28,47,58,0.14);
+      --shadow-lg:  0 12px 40px rgba(28,47,58,0.20);
+      --r: 12px;
+    }
+
+    body {
+      background: var(--sky);
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(184,221,240,0.7) 0%, transparent 50%),
+        radial-gradient(circle at 85% 80%, rgba(200,236,223,0.45) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(240,216,226,0.25) 0%, transparent 70%);
+      font-family: 'Crimson Pro', serif;
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(58,143,168,0.13) 1px, transparent 1px);
+      background-size: 26px 26px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* HEADER */
+    header {
+      position: relative; z-index: 2;
+      background: linear-gradient(135deg, #1f5a73 0%, #2a6f85 45%, #3a8fa8 100%);
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 24px rgba(28,47,58,0.25);
+      overflow: hidden;
+    }
+    header::after {
+      content: '✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦ ✧ ✦';
+      position: absolute; bottom: 3px; left: 0; right: 0;
+      text-align: center;
+      color: rgba(255,255,255,0.15);
+      font-size: 0.52rem;
+      letter-spacing: 0.35em;
+      pointer-events: none;
+    }
+    .hdr-brand { padding: 14px 0; }
+    .hdr-brand h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-style: italic;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .hdr-brand .tagline {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.56rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+    .hdr-right { display: flex; align-items: center; gap: 12px; }
+    .hdr-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.9);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      padding: 4px 13px;
+      border-radius: 20px;
+    }
+    .btn-hdr-history {
+      background: rgba(255,255,255,0.14);
+      border: 1.5px solid rgba(255,255,255,0.38);
+      color: #fff;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      padding: 7px 18px;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-hdr-history:hover { background: rgba(255,255,255,0.26); }
+
+    /* LAYOUT */
+    .app {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 375px;
+      height: calc(100vh - 72px);
+    }
+
+    /* LEFT */
+    .left {
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid var(--border-lt);
+      overflow: hidden;
+    }
+
+    /* RIGHT */
+    .right {
+      display: flex;
+      flex-direction: column;
+      background: rgba(238,247,252,0.82);
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+    }
+
+    /* SECTION HEADS */
+    .sec-head {
+      padding: 13px 22px 11px;
+      border-bottom: 1.5px solid var(--border-lt);
+      background: rgba(255,255,255,0.58);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sec-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--teal-dark);
+    }
+    .sec-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink3);
+    }
+
+    /* ADD FORM */
+    .add-form {
+      padding: 14px 22px;
+      background: rgba(255,255,255,0.52);
+      border-bottom: 2px solid var(--border-lt);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .fg { display: flex; flex-direction: column; gap: 4px; }
+    .fg label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink2);
+    }
+    .fg input, .fg select {
+      font-family: 'Crimson Pro', serif;
+      font-size: 0.97rem;
+      background: var(--sky-pale);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 11px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .fg input:focus, .fg select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(58,143,168,0.13);
+    }
+    .fg-name input  { width: 178px; }
+    .fg-price input { width: 95px; }
+    .fg-cat select  { width: 126px; }
+
+    /* BUTTONS */
+    .btn {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-add {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(58,143,168,0.38);
+      align-self: flex-end;
+    }
+    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(58,143,168,0.48); }
+    .btn-checkout {
+      background: linear-gradient(135deg, #327a5a 0%, var(--sage) 100%);
+      color: #fff;
+      width: 100%;
+      padding: 13px;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(74,148,112,0.38);
+    }
+    .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(74,148,112,0.48); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink2);
+      border: 1.5px solid var(--border);
+      font-size: 0.78rem;
+      padding: 5px 14px;
+      border-radius: 20px;
+    }
+    .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* ITEM CARDS */
+    .items-scroll { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+      gap: 12px;
+    }
+    .item-card {
+      background: rgba(255,255,255,0.78);
+      border: 1.5px solid var(--border-lt);
+      border-radius: var(--r);
+      padding: 13px 12px 12px;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.18s;
+    }
+    .item-card::after {
+      content: '';
+      position: absolute; top: 0; left: 18px; right: 18px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+      border-radius: 0 0 4px 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .item-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-3px) rotate(-0.4deg);
+      box-shadow: var(--shadow-md);
+    }
+    .item-card:hover::after { opacity: 1; }
+    .item-card:active { transform: translateY(0) rotate(0); }
+    .ic-cat {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.57rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal-dark);
+      background: var(--sky);
+      padding: 2px 7px;
+      border-radius: 10px;
+      width: fit-content;
+    }
+    .ic-name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+    .ic-price {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--teal-dark);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .ic-del {
+      position: absolute; top: 7px; right: 8px;
+      background: none; border: none;
+      color: var(--border-lt);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 1px 4px;
+      border-radius: 4px;
+      transition: color 0.12s;
+      line-height: 1;
+    }
+    .ic-del:hover { color: var(--rose); }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--ink3);
+    }
+    .empty-state .ei { font-size: 2.8rem; margin-bottom: 10px; opacity: 0.65; }
+    .empty-state p { font-style: italic; font-size: 0.95rem; }
+
+    /* CART */
+    .cart-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 13px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .cart-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--ink3);
+      opacity: 0.6;
+    }
+    .cart-empty .ei { font-size: 2.2rem; }
+    .cart-empty p { font-style: italic; font-size: 0.9rem; }
+
+    .cart-row {
+      background: rgba(255,255,255,0.82);
+      border: 1.5px solid var(--border-lt);
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      animation: rowIn 0.15s ease;
+    }
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .cr-info { flex: 1; min-width: 0; }
+    .cr-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cr-unit {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.67rem;
+      color: var(--ink3);
+      margin-top: 1px;
+    }
+    .qty-ctrl { display: flex; align-items: center; gap: 6px; }
+    .qty-btn {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--sky);
+      border: 1.5px solid var(--border);
+      color: var(--teal-dark);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+      line-height: 1;
+    }
+    .qty-btn:hover { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .qty-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      min-width: 18px;
+      text-align: center;
+      color: var(--ink);
+    }
+    .cr-total {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--teal-dark);
+      font-weight: 500;
+      min-width: 56px;
+      text-align: right;
+    }
+
+    /* CART FOOTER */
+    .cart-foot {
+      border-top: 2px solid var(--border-lt);
+      padding: 13px 15px;
+      background: rgba(255,255,255,0.62);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .totals { display: flex; flex-direction: column; gap: 4px; }
+    .tot-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.9rem; font-style: italic; color: var(--ink2);
+    }
+    .tot-row .mono { font-family: 'DM Mono', monospace; font-style: normal; }
+    .tot-row.grand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.18rem; font-weight: 800; color: var(--ink);
+      padding-top: 7px;
+      border-top: 1.5px dashed var(--border);
+      margin-top: 3px;
+    }
+    .cash-row { display: flex; align-items: center; gap: 9px; }
+    .cash-row label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink2);
+      white-space: nowrap;
+    }
+    .cash-row input {
+      flex: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.92rem;
+      background: var(--sky-pale);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: var(--ink); outline: none;
+    }
+    .cash-row input:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(74,148,112,0.13); }
+    .change-pill {
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.83rem;
+      font-style: italic;
+    }
+    .change-pill.ok    { background: var(--mint); color: var(--sage); }
+    .change-pill.short { background: var(--blush); color: var(--rose); }
+    .change-pill .cv { font-family: 'DM Mono', monospace; font-style: normal; font-weight: 500; font-size: 0.97rem; }
+
+    /* MODALS */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(28,47,58,0.52);
+      backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box {
+      background: var(--sky-pale);
+      border-radius: 18px;
+      padding: 28px 26px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      border: 2px solid var(--border-lt);
+      animation: popUp 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popUp {
+      from { transform: scale(0.88) translateY(18px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-receipt { width: 345px; }
+    .modal-history { width: 490px; }
+
+    /* RECEIPT */
+    .receipt { font-family: 'Crimson Pro', serif; }
+    .r-head {
+      text-align: center;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1.5px dashed var(--border);
+    }
+    .r-head h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; font-style: italic;
+      color: var(--teal-dark);
+    }
+    .r-head .r-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.67rem; color: var(--ink3);
+      letter-spacing: 0.1em; margin-top: 4px;
+    }
+    .r-head .r-txn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem; color: var(--border);
+      letter-spacing: 0.12em;
+    }
+    .r-items { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+    .r-item  { display: flex; justify-content: space-between; gap: 8px; font-size: 0.95rem; }
+    .r-item-name { flex: 1; color: var(--ink); }
+    .r-item-qty  { color: var(--ink3); font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+    .r-item-amt  { text-align: right; font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--teal-dark); }
+    .r-dash      { border: none; border-top: 1.5px dashed var(--border); margin: 10px 0; }
+    .r-total     { display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--ink2); }
+    .r-total .mono { font-family: 'DM Mono', monospace; }
+    .r-total.grand { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+    .r-change { color: var(--sage) !important; }
+    .r-foot { text-align: center; margin-top: 12px; font-style: italic; font-size: 0.82rem; color: var(--ink3); }
+    .r-foot .stars { letter-spacing: 0.35em; font-size: 0.68rem; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+    /* HISTORY */
+    .hist-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .hist-head h2 { font-family: 'Playfair Display', serif; font-size: 1.38rem; font-style: italic; color: var(--teal-dark); }
+    .hist-summary {
+      display: flex; gap: 14px;
+      padding: 12px 16px; margin-bottom: 16px;
+      background: rgba(58,143,168,0.08);
+      border-radius: 10px;
+      border: 1px solid var(--border-lt);
+    }
+    .hs { flex: 1; text-align: center; }
+    .hs-val { font-family: 'DM Mono', monospace; font-size: 1.12rem; font-weight: 500; color: var(--teal-dark); }
+    .hs-lbl { font-size: 0.72rem; font-style: italic; color: var(--ink3); }
+    .txn-card { border: 1.5px solid var(--border-lt); border-radius: 10px; margin-bottom: 10px; overflow: hidden; background: rgba(255,255,255,0.7); }
+    .txn-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px;
+      background: rgba(184,221,240,0.28);
+      border-bottom: 1px solid var(--border-lt);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .txn-head:hover { background: rgba(184,221,240,0.48); }
+    .txn-id   { font-family: 'DM Mono', monospace; font-size: 0.63rem; color: var(--ink3); letter-spacing: 0.1em; }
+    .txn-when { font-size: 0.8rem; font-style: italic; color: var(--ink2); }
+    .txn-amt  { font-family: 'DM Mono', monospace; font-size: 0.92rem; font-weight: 500; color: var(--teal-dark); }
+    .txn-chev { color: var(--ink3); font-size: 0.72rem; }
+    .txn-rows { padding: 10px 14px; display: flex; flex-direction: column; gap: 5px; }
+    .txn-item { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--ink2); }
+    .txn-item .mono { font-family: 'DM Mono', monospace; font-size: 0.8rem; }
+    .txn-money {
+      display: flex; justify-content: space-between;
+      font-size: 0.85rem; color: var(--sage);
+      padding-top: 6px; margin-top: 4px;
+      border-top: 1px dashed var(--border-lt);
+      font-style: italic;
+    }
+    .txn-money .mono { font-family: 'DM Mono', monospace; font-style: normal; }
+    .hist-empty { text-align: center; padding: 40px; font-style: italic; color: var(--ink3); }
+    .btn-clr-hist {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+      background: transparent;
+      border: 1.5px solid var(--blush);
+      color: var(--rose);
+      padding: 5px 13px; border-radius: 20px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-clr-hist:hover { background: var(--blush); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    @media (max-width: 720px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: 55vh auto; height: auto; }
+      .left { border-right: none; border-bottom: 2px solid var(--border-lt); }
+      .modal-history { width: 95vw; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-brand">
+    <h1>✦ Garage Sale POS ✦</h1>
+    <div class="tagline">Point of Sale · Est. Today</div>
+  </div>
+  <div class="hdr-right">
+    <button class="btn-hdr-history" onclick="openHistory()">📜 Sales History</button>
+    <span class="hdr-badge" id="hdr-badge">0 sales today</span>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: Items -->
+  <div class="left">
+    <div class="sec-head">
+      <span class="sec-title">Items for Sale</span>
+      <span class="sec-count" id="item-count">0 items</span>
+    </div>
+
+    <div class="add-form">
+      <div class="fg fg-name">
+        <label>Item Name</label>
+        <input type="text" id="f-name" placeholder="e.g. Vintage lamp"/>
+      </div>
+      <div class="fg fg-price">
+        <label>Price (₱)</label>
+        <input type="number" id="f-price" placeholder="0.00" min="0" step="0.5"/>
+      </div>
+      <div class="fg fg-cat">
+        <label>Category</label>
+        <select id="f-cat">
+          <option>General</option><option>Clothing</option><option>Electronics</option>
+          <option>Furniture</option><option>Books</option><option>Toys</option>
+          <option>Kitchen</option><option>Decor</option><option>Other</option>
+        </select>
+      </div>
+      <button class="btn btn-add" onclick="addItem()">+ Add Item</button>
+    </div>
+
+    <div class="items-scroll">
+      <div class="items-grid" id="items-grid"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Cart -->
+  <div class="right">
+    <div class="sec-head">
+      <span class="sec-title">Current Sale</span>
+      <button class="btn btn-ghost" onclick="clearCart()">Clear Cart</button>
+    </div>
+
+    <div class="cart-scroll" id="cart-scroll"></div>
+
+    <div class="cart-foot">
+      <div class="totals">
+        <div class="tot-row">
+          <span>Subtotal</span>
+          <span class="mono" id="subtotal">₱0.00</span>
+        </div>
+        <div class="tot-row grand">
+          <span>Total</span>
+          <span class="mono" id="grand-total">₱0.00</span>
+        </div>
+      </div>
+      <div class="cash-row">
+        <label>Cash Tendered</label>
+        <input type="number" id="cash-in" placeholder="0.00" min="0" step="1" oninput="calcChange()"/>
+      </div>
+      <div id="change-pill" style="display:none" class="change-pill ok">
+        <span id="change-lbl">Change</span>
+        <span class="cv" id="change-val">₱0.00</span>
+      </div>
+      <button class="btn btn-checkout" onclick="checkout()">✦ Checkout ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="overlay" id="overlay-receipt" style="display:none">
+  <div class="modal-box modal-receipt">
+    <div class="receipt" id="receipt-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1;border-radius:10px" onclick="printReceipt()">🖨 Print</button>
+      <button class="btn btn-checkout" style="flex:1.5;border-radius:10px;padding:11px" onclick="newSale()">New Sale ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="overlay" id="overlay-history" style="display:none">
+  <div class="modal-box modal-history">
+    <div class="hist-head">
+      <h2>✦ Sales History</h2>
+      <button class="btn-clr-hist" onclick="clearHistory()">Clear All</button>
+    </div>
+    <div class="hist-summary" id="hist-summary"></div>
+    <div id="hist-list"></div>
+    <div style="text-align:right;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeHistory()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────
+  let items   = JSON.parse(localStorage.getItem('gs2_items')   || '[]');
+  let history = JSON.parse(localStorage.getItem('gs2_history') || '[]');
+  let cart    = [];
+  let openTxn = null;
+
+  // ── UTILS ──────────────────────────────────────────────
+  const fmt  = n => '₱' + parseFloat(n).toFixed(2);
+  const save = () => {
+    localStorage.setItem('gs2_items',   JSON.stringify(items));
+    localStorage.setItem('gs2_history', JSON.stringify(history));
+  };
+
+  // ── ITEMS ──────────────────────────────────────────────
+  function addItem() {
+    const name  = document.getElementById('f-name').value.trim();
+    const price = parseFloat(document.getElementById('f-price').value);
+    const cat   = document.getElementById('f-cat').value;
+    if (!name)              { alert('Please enter an item name.'); return; }
+    if (isNaN(price)||price<0) { alert('Please enter a valid price.'); return; }
+    items.push({ id: Date.now(), name, price, cat });
+    save(); renderItems();
+    document.getElementById('f-name').value  = '';
+    document.getElementById('f-price').value = '';
+    document.getElementById('f-name').focus();
+  }
+
+  function deleteItem(id) {
+    items = items.filter(i => i.id !== id);
+    cart  = cart.filter(c => c.item.id !== id);
+    save(); renderItems(); renderCart();
+  }
+
+  function renderItems() {
+    const grid = document.getElementById('items-grid');
+    document.getElementById('item-count').textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
+    if (!items.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="ei">📦</div><p>Add your items above to get started!</p></div>`;
+      return;
+    }
+    grid.innerHTML = items.map(it => `
+      <div class="item-card" onclick="addToCart(${it.id})">
+        <button class="ic-del" onclick="event.stopPropagation();deleteItem(${it.id})">×</button>
+        <span class="ic-cat">${it.cat}</span>
+        <span class="ic-name">${it.name}</span>
+        <span class="ic-price">${fmt(it.price)}</span>
+      </div>`).join('');
+  }
+
+  // ── CART ──────────────────────────────────────────────
+  function addToCart(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const ex = cart.find(c => c.item.id === id);
+    ex ? ex.qty++ : cart.push({ item, qty: 1 });
+    renderCart();
+  }
+
+  function changeQty(id, d) {
+    const idx = cart.findIndex(c => c.item.id === id);
+    if (idx < 0) return;
+    cart[idx].qty += d;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    renderCart();
+  }
+
+  function clearCart() {
+    if (!cart.length) return;
+    if (!confirm('Clear the current cart?')) return;
+    cart = [];
+    document.getElementById('cash-in').value = '';
+    document.getElementById('change-pill').style.display = 'none';
+    renderCart();
+  }
+
+  const getTotal = () => cart.reduce((s, c) => s + c.item.price * c.qty, 0);
+
+  function renderCart() {
+    const wrap  = document.getElementById('cart-scroll');
+    const total = getTotal();
+    document.getElementById('subtotal').textContent    = fmt(total);
+    document.getElementById('grand-total').textContent = fmt(total);
+    if (!cart.length) {
+      wrap.innerHTML = `<div class="cart-empty"><div class="ei">🛒</div><p>Tap items to add to cart</p></div>`;
+      calcChange(); return;
+    }
+    wrap.innerHTML = cart.map(c => `
+      <div class="cart-row">
+        <div class="cr-info">
+          <div class="cr-name">${c.item.name}</div>
+          <div class="cr-unit">${fmt(c.item.price)} each</div>
+        </div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(${c.item.id},-1)">−</button>
+          <span class="qty-num">${c.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${c.item.id},+1)">+</button>
+        </div>
+        <div class="cr-total">${fmt(c.item.price * c.qty)}</div>
+      </div>`).join('');
+    calcChange();
+  }
+
+  function calcChange() {
+    const cash  = parseFloat(document.getElementById('cash-in').value);
+    const total = getTotal();
+    const pill  = document.getElementById('change-pill');
+    if (isNaN(cash) || !cart.length) { pill.style.display = 'none'; return; }
+    const diff = cash - total;
+    pill.style.display = 'flex';
+    document.getElementById('change-val').textContent = fmt(Math.abs(diff));
+    if (diff < 0) {
+      pill.className = 'change-pill short';
+      document.getElementById('change-lbl').textContent = 'Short by';
+    } else {
+      pill.className = 'change-pill ok';
+      document.getElementById('change-lbl').textContent = 'Change';
+    }
+  }
+
+  // ── CHECKOUT ──────────────────────────────────────────
+  function checkout() {
+    if (!cart.length) { alert('Cart is empty!'); return; }
+    const cash  = parseFloat(document.getElementById('cash-in').value);
+    const total = getTotal();
+    if (!isNaN(cash) && cash < total) { alert('Cash tendered is less than total!'); return; }
+    const txn = {
+      id:     'TXN-' + Date.now(),
+      date:   new Date().toISOString(),
+      items:  cart.map(c => ({ name: c.item.name, qty: c.qty, price: c.item.price })),
+      total,
+      cash:   isNaN(cash) ? null : cash,
+      change: isNaN(cash) ? null : cash - total
+    };
+    history.unshift(txn);
+    save();
+    updateBadge();
+    showReceipt(txn);
+  }
+
+  // ── RECEIPT ───────────────────────────────────────────
+  function buildReceipt(txn) {
+    const d  = new Date(txn.date);
+    const ds = d.toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+    const ts = d.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+    const rows = txn.items.map(it => `
+      <div class="r-item">
+        <span class="r-item-name">${it.name}</span>
+        <span class="r-item-qty">×${it.qty}</span>
+        <span class="r-item-amt">${fmt(it.price * it.qty)}</span>
+      </div>`).join('');
+    const moneyRows = txn.cash != null ? `
+      <hr class="r-dash"/>
+      <div class="r-total"><span>Cash Tendered</span><span class="mono">${fmt(txn.cash)}</span></div>
+      <div class="r-total r-change"><span>Change</span><span class="mono">${fmt(txn.change)}</span></div>` : '';
+    return `
+      <div class="r-head">
+        <h2>✦ Garage Sale ✦</h2>
+        <div class="r-date">${ds} · ${ts}</div>
+        <div class="r-txn">${txn.id}</div>
+      </div>
+      <div class="r-items">${rows}</div>
+      <hr class="r-dash"/>
+      <div class="r-total grand"><span>Total</span><span class="mono">${fmt(txn.total)}</span></div>
+      ${moneyRows}
+      <div class="r-foot"><div class="stars">✦ ✧ ✦ ✧ ✦</div><p>Thank you for shopping!</p></div>`;
+  }
+
+  function showReceipt(txn) {
+    document.getElementById('receipt-body').innerHTML = buildReceipt(txn);
+    document.getElementById('overlay-receipt').style.display = 'flex';
+  }
+
+  function printReceipt() {
+    const w = window.open('', '_blank', 'width=320,height=530');
+    w.document.write(`<html><head><title>Receipt</title>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,800&family=Crimson+Pro&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+      <style>
+        body{font-family:'Crimson Pro',serif;font-size:13px;padding:20px;max-width:280px;margin:auto;color:#1c2f3a}
+        .r-head{text-align:center;padding-bottom:11px;margin-bottom:11px;border-bottom:1px dashed #aacfdf}
+        .r-head h2{font-family:'Playfair Display',serif;font-style:italic;font-size:1.4rem;color:#2a6f85}
+        .r-date{font-family:'DM Mono',monospace;font-size:11px;color:#7ea3b8;margin-top:3px}
+        .r-txn{font-family:'DM Mono',monospace;font-size:9px;color:#aacfdf}
+        .r-dash{border:none;border-top:1px dashed #aacfdf;margin:8px 0}
+        .r-items{display:flex;flex-direction:column;gap:4px}
+        .r-item{display:flex;justify-content:space-between;gap:8px}
+        .r-item-name{flex:1}.r-item-qty{color:#7ea3b8;font-family:'DM Mono',monospace;font-size:11px}
+        .r-item-amt{text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:#2a6f85}
+        .r-total{display:flex;justify-content:space-between}
+        .r-total.grand{font-family:'Playfair Display',serif;font-size:1rem;font-weight:800}
+        .r-change{color:#4a9470!important}.mono{font-family:'DM Mono',monospace}
+        .r-foot{text-align:center;font-style:italic;font-size:11px;color:#7ea3b8;margin-top:10px}
+        .stars{letter-spacing:.3em;font-size:10px}
+      </style></head><body>${document.getElementById('receipt-body').innerHTML}</body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 420);
+  }
+
+  function newSale() {
+    cart = [];
+    document.getElementById('cash-in').value = '';
+    document.getElementById('change-pill').style.display = 'none';
+    document.getElementById('overlay-receipt').style.display = 'none';
+    renderCart();
+  }
+
+  // ── HISTORY ───────────────────────────────────────────
+  function updateBadge() {
+    const today = new Date().toDateString();
+    const n = history.filter(t => new Date(t.date).toDateString() === today).length;
+    document.getElementById('hdr-badge').textContent = n + ' sale' + (n !== 1 ? 's' : '') + ' today';
+  }
+
+  function openHistory()  { renderHistory(); document.getElementById('overlay-history').style.display = 'flex'; }
+  function closeHistory() { document.getElementById('overlay-history').style.display = 'none'; }
+
+  function clearHistory() {
+    if (!confirm('Clear all sales history?')) return;
+    history = []; save(); updateBadge(); renderHistory();
+  }
+
+  function toggleTxn(id) { openTxn = openTxn === id ? null : id; renderHistory(); }
+
+  function renderHistory() {
+    const total     = history.reduce((s, t) => s + t.total, 0);
+    const itemsSold = history.reduce((s, t) => s + t.items.reduce((a, i) => a + i.qty, 0), 0);
+    document.getElementById('hist-summary').innerHTML = `
+      <div class="hs"><div class="hs-val">${history.length}</div><div class="hs-lbl">Transactions</div></div>
+      <div class="hs"><div class="hs-val">${itemsSold}</div><div class="hs-lbl">Items Sold</div></div>
+      <div class="hs"><div class="hs-val">${fmt(total)}</div><div class="hs-lbl">Total Revenue</div></div>`;
+
+    if (!history.length) {
+      document.getElementById('hist-list').innerHTML = `<div class="hist-empty">No sales recorded yet.<br><em>Your checkouts will appear here.</em></div>`;
+      return;
+    }
+
+    document.getElementById('hist-list').innerHTML = history.map(txn => {
+      const d  = new Date(txn.date);
+      const ds = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+      const ts = d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+      const exp = openTxn === txn.id;
+
+      const detailRows = exp ? txn.items.map(it => `
+        <div class="txn-item">
+          <span>${it.name} <span style="color:var(--ink3)">×${it.qty}</span></span>
+          <span class="mono">${fmt(it.price * it.qty)}</span>
+        </div>`).join('') + (txn.cash != null ? `
+        <div class="txn-money">
+          <span>Cash / Change</span>
+          <span class="mono">${fmt(txn.cash)} / ${fmt(txn.change)}</span>
+        </div>` : '') : '';
+
+      return `
+        <div class="txn-card">
+          <div class="txn-head" onclick="toggleTxn('${txn.id}')">
+            <div>
+              <div class="txn-id">${txn.id}</div>
+              <div class="txn-when">${ds} · ${ts}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="txn-amt">${fmt(txn.total)}</span>
+              <span class="txn-chev">${exp ? '▲' : '▼'}</span>
+            </div>
+          </div>
+          ${exp ? `<div class="txn-rows">${detailRows}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  // close history on overlay click
+  document.getElementById('overlay-history').addEventListener('click', e => {
+    if (e.target === document.getElementById('overlay-history')) closeHistory();
+  });
+
+  // keyboard shortcuts
+  document.getElementById('f-price').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+  document.getElementById('f-name').addEventListener('keydown',  e => { if (e.key === 'Enter') document.getElementById('f-price').focus(); });
+
+  // ── INIT ──────────────────────────────────────────────
+  renderItems();
+  renderCart();
+  updateBadge();
+</script>
+</body>
+</html>
