@@ -269,6 +269,25 @@ button{
   padding:40px 20px;
 }
 
+/* ── ADDED: Clear History button ── */
+.btn-clear{
+  padding:7px 14px;
+  background:transparent;
+  border:1px solid var(--accent);
+  color:var(--accent-dark);
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;
+  letter-spacing:.08em;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.18s;
+}
+
+.btn-clear:hover{
+  background:#eef4fb;
+  border-color:var(--accent-dark);
+}
+
 @media(max-width:900px){
   .layout{
     grid-template-columns:1fr;
@@ -367,6 +386,8 @@ button{
 
   <div class="sec-head">
     <h2>Sales History ༉‧₊˚.</h2>
+    <!-- ADDED: Clear History button -->
+    <button class="btn-clear" onclick="clearHistory()">Clear History⸝⸝․ᐟ</button>
   </div>
 
   <div class="history-list" id="historyList">
@@ -464,6 +485,20 @@ function checkout(){
   currentSale = [];
 
   renderSale();
+  renderHistory();
+}
+
+// ADDED: Clear History function
+function clearHistory(){
+  if(!history.length){
+    alert('Nothing to clear!');
+    return;
+  }
+  if(!confirm('Clear all sales history? This cannot be undone.')){
+    return;
+  }
+  history = [];
+  localStorage.setItem('blue_ledger_history', JSON.stringify(history));
   renderHistory();
 }
 
