@@ -4,16 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sales Tracker</title>
-
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Crimson+Pro:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+*{ margin:0; padding:0; box-sizing:border-box; }
 
 :root{
   --bg:#dfeaf7;
@@ -25,6 +19,8 @@
   --accent:#84a9d8;
   --accent-dark:#6e92c2;
   --green:#8fb6a2;
+  --gold:#c9a96e;
+  --gold-light:#f5ead8;
   --shadow:0 8px 24px rgba(86,110,136,.12);
 }
 
@@ -45,10 +41,7 @@ body::before{
   pointer-events:none;
 }
 
-.app{
-  max-width:1200px;
-  margin:auto;
-}
+.app{ max-width:1200px; margin:auto; }
 
 header{
   background:rgba(247,251,255,.85);
@@ -60,18 +53,8 @@ header{
   box-shadow:var(--shadow);
 }
 
-header h1{
-  font-family:'Playfair Display',serif;
-  font-size:2rem;
-  color:var(--accent-dark);
-}
-
-header p{
-  margin-top:6px;
-  color:var(--muted);
-  font-size:.95rem;
-  letter-spacing:.04em;
-}
+header h1{ font-family:'Playfair Display',serif; font-size:2rem; color:var(--accent-dark); }
+header p{ margin-top:6px; color:var(--muted); font-size:.95rem; letter-spacing:.04em; }
 
 .layout{
   display:grid;
@@ -97,11 +80,7 @@ header p{
   background:rgba(255,255,255,.5);
 }
 
-.sec-head h2{
-  font-family:'Playfair Display',serif;
-  color:var(--accent-dark);
-  font-size:1.2rem;
-}
+.sec-head h2{ font-family:'Playfair Display',serif; color:var(--accent-dark); font-size:1.2rem; }
 
 .form{
   padding:22px;
@@ -110,11 +89,7 @@ header p{
   gap:12px;
 }
 
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
+.field{ display:flex; flex-direction:column; gap:6px; }
 
 .field label{
   font-size:.72rem;
@@ -134,16 +109,9 @@ header p{
   outline:none;
 }
 
-.field input:focus{
-  border-color:var(--accent);
-}
+.field input:focus{ border-color:var(--accent); }
 
-button{
-  border:none;
-  cursor:pointer;
-  border-radius:14px;
-  transition:.18s;
-}
+button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 .btn-add{
   align-self:end;
@@ -153,17 +121,14 @@ button{
   font-family:'Playfair Display',serif;
   font-size:1rem;
 }
-
-.btn-add:hover{
-  background:var(--accent-dark);
-}
+.btn-add:hover{ background:var(--accent-dark); }
 
 .sale-list{
   padding:18px;
   display:flex;
   flex-direction:column;
   gap:10px;
-  min-height:300px;
+  min-height:200px;
 }
 
 .sale-row{
@@ -176,27 +141,31 @@ button{
   align-items:center;
 }
 
-.sale-info h3{
-  font-family:'Playfair Display',serif;
-  font-size:1rem;
-}
+.sale-row-left{ display:flex; align-items:center; gap:10px; }
 
-.sale-info p{
+.sale-info h3{ font-family:'Playfair Display',serif; font-size:1rem; }
+.sale-info p{ color:var(--muted); margin-top:4px; font-size:.85rem; }
+.price{ font-family:'DM Mono',monospace; color:var(--accent-dark); }
+
+.btn-remove{
+  width:26px; height:26px;
+  border-radius:8px;
+  background:transparent;
+  border:1px solid var(--border);
   color:var(--muted);
-  margin-top:4px;
-  font-size:.85rem;
+  font-size:1rem;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition:.15s;
+  flex-shrink:0;
 }
-
-.price{
-  font-family:'DM Mono', monospace;
-  color:var(--accent-dark);
-}
+.btn-remove:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; }
 
 .summary{
   padding:22px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:14px;
 }
 
 .card{
@@ -218,9 +187,20 @@ button{
   margin-top:8px;
   font-size:1rem;
   color:var(--accent-dark);
-  font-weight: 600;
-  font-family:'DM Mono', monospace;
+  font-weight:600;
+  font-family:'DM Mono',monospace;
 }
+
+/* Daily summary card highlight */
+.card.daily-card{
+  border-color:var(--gold);
+  background:var(--gold-light);
+}
+
+.card.daily-card small{ color:var(--gold); }
+.card.daily-card h3{ color:#a07840; }
+
+.btn-group{ display:flex; flex-direction:column; gap:10px; }
 
 .checkout{
   width:100%;
@@ -230,15 +210,58 @@ button{
   font-size:1rem;
   font-family:'Playfair Display',serif;
 }
+.checkout:hover{ filter:brightness(.95); }
 
-.checkout:hover{
-  filter:brightness(.95);
+.btn-save-day{
+  width:100%;
+  padding:14px;
+  background:var(--gold);
+  color:white;
+  font-size:1rem;
+  font-family:'Playfair Display',serif;
+  border-radius:14px;
+  border:none;
+  cursor:pointer;
+  transition:.18s;
+}
+.btn-save-day:hover{ filter:brightness(.95); }
+
+/* Tabs */
+.tabs{
+  display:flex;
+  gap:0;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.5);
 }
 
-.history{
-  margin-top:20px;
+.tab-btn{
+  flex:1;
+  padding:14px 10px;
+  background:transparent;
+  border:none;
+  border-bottom:3px solid transparent;
+  color:var(--muted);
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:.18s;
+  border-radius:0;
 }
 
+.tab-btn.active{
+  color:var(--accent-dark);
+  border-bottom-color:var(--accent);
+  background:rgba(132,169,216,.07);
+}
+
+.tab-btn:hover:not(.active){ color:var(--accent-dark); background:rgba(132,169,216,.05); }
+
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+
+/* History / Daily lists */
 .history-list{
   padding:18px;
   display:flex;
@@ -257,20 +280,71 @@ button{
   display:flex;
   justify-content:space-between;
   margin-bottom:8px;
+  align-items:center;
 }
 
-.history-total{
-  font-family:'DM Mono',monospace;
+.history-total{ font-family:'DM Mono',monospace; color:var(--accent-dark); }
+
+/* Daily record card */
+.daily-record{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+}
+
+.daily-record-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.daily-record-date{
+  font-family:'Playfair Display',serif;
   color:var(--accent-dark);
+  font-size:1rem;
 }
 
-.empty{
-  text-align:center;
+.daily-record-meta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.daily-badge{
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;
   color:var(--muted);
-  padding:40px 20px;
 }
 
-/* ── ADDED: Clear History button ── */
+.daily-total{
+  font-family:'DM Mono',monospace;
+  color:var(--gold);
+  font-weight:500;
+}
+
+.daily-transactions{ padding-top:8px; border-top:1px solid var(--border); }
+.daily-txn{ margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); }
+
+.daily-txn-head{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:4px;
+  font-size:.8rem;
+  color:var(--muted);
+}
+
+.daily-txn-total{ font-family:'DM Mono',monospace; }
+
+.collapse-icon{ font-size:.7rem; color:var(--muted); transition:.2s; }
+.daily-record.collapsed .daily-transactions{ display:none; }
+.daily-record.collapsed .collapse-icon{ transform:rotate(-90deg); }
+
+.empty{ text-align:center; color:var(--muted); padding:40px 20px; }
+
 .btn-clear{
   padding:7px 14px;
   background:transparent;
@@ -283,23 +357,8 @@ button{
   cursor:pointer;
   transition:.18s;
 }
+.btn-clear:hover{ background:#eef4fb; border-color:var(--accent-dark); }
 
-.btn-clear:hover{
-  background:#eef4fb;
-  border-color:var(--accent-dark);
-}
-
-@media(max-width:900px){
-  .layout{
-    grid-template-columns:1fr;
-  }
-
-  .form{
-    grid-template-columns:1fr;
-  }
-}
-
-/* ── ADDED: Qty stepper ── */
 .qty-stepper{
   display:flex;
   align-items:center;
@@ -320,29 +379,68 @@ button{
 }
 
 .qty-btn{
-  width:26px;
-  height:26px;
+  width:26px; height:26px;
   border-radius:8px;
   background:var(--panel2);
   border:1px solid var(--border);
   color:var(--accent-dark);
   font-size:1rem;
   line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:flex; align-items:center; justify-content:center;
   cursor:pointer;
   transition:.15s;
 }
+.qty-btn:hover{ background:var(--accent); color:white; border-color:var(--accent); }
 
-.qty-btn:hover{
-  background:var(--accent);
-  color:white;
-  border-color:var(--accent);
+/* Overall stats bar */
+.stats-bar{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:20px;
+}
+
+.stat-card{
+  background:rgba(247,251,255,.9);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 20px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(8px);
+}
+
+.stat-card small{
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:.65rem;
+  font-family:'DM Mono',monospace;
+}
+
+.stat-card h3{
+  margin-top:8px;
+  font-size:1.1rem;
+  color:var(--accent-dark);
+  font-family:'DM Mono',monospace;
+  font-weight:600;
+}
+
+.history-full{ margin-top:20px; }
+
+/* current day indicator */
+.current-day-sale-count{
+  font-size:.75rem;
+  color:var(--gold);
+  font-family:'DM Mono',monospace;
+}
+
+@media(max-width:900px){
+  .layout{ grid-template-columns:1fr; }
+  .form{ grid-template-columns:1fr; }
+  .stats-bar{ grid-template-columns:1fr 1fr; }
 }
 </style>
 </head>
-
 <body>
 
 <div class="app">
@@ -352,27 +450,40 @@ button{
   <p>small sales recorder! 𑣲</p>
 </header>
 
+<!-- Overall Stats Bar -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <small>Total Revenue</small>
+    <h3 id="overallRevenue">₱0.00</h3>
+  </div>
+  <div class="stat-card">
+    <small>All Transactions</small>
+    <h3 id="overallTxns">0</h3>
+  </div>
+  <div class="stat-card">
+    <small>Items Sold</small>
+    <h3 id="overallItems">0</h3>
+  </div>
+</div>
+
 <div class="layout">
 
+  <!-- LEFT: Transaction Entry -->
   <div class="panel">
-
     <div class="sec-head">
       <h2>Transaction .☘︎ ́˖</h2>
       <span id="itemCount">0 items</span>
     </div>
 
     <div class="form">
-
       <div class="field">
         <label>Item Name</label>
-        <input type="text" id="itemName" style="font-family: 'DM Mono', monospace; font-style:italic; font-size: 0.70rem;" color:#A4A4A4; placeholder="Item Name">
+        <input type="text" id="itemName" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="Item Name">
       </div>
-
       <div class="field">
         <label>Price</label>
-        <input type="number" id="itemPrice" style="font-family: 'DM Mono', monospace; font-style:italic; font-size: 0.70rem;" color:#A4A4A4; placeholder="0.00">
+        <input type="number" id="itemPrice" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="0.00">
       </div>
-
       <div class="field">
         <label>Qty</label>
         <div class="qty-stepper">
@@ -381,229 +492,313 @@ button{
           <button class="qty-btn" onclick="changeQty(1)">+</button>
         </div>
       </div>
-
       <button class="btn-add" onclick="addItem()">Add</button>
-
     </div>
 
     <div class="sale-list" id="saleList">
-
-      <div class="empty">
-        Add items for this transaction
-      </div>
-
+      <div class="empty">Add items for this transaction</div>
     </div>
-
   </div>
 
+  <!-- RIGHT: Summary + Actions -->
   <div class="panel">
-
     <div class="sec-head">
-      <h2>Overall Summary .⋆</h2>
+      <h2>Current Sale .⋆</h2>
     </div>
 
     <div class="summary">
-
       <div class="card">
-        <small>Total Revenue</small>
-        <h3 id="revenue">₱0.00</h3>
+        <small>This Sale</small>
+        <h3 id="currentTotal">₱0.00</h3>
       </div>
 
-      <div class="card">
-        <small>Transactions</small>
-        <h3 id="transactions">0</h3>
+      <div class="card daily-card">
+        <small>Today's Running Total</small>
+        <h3 id="dayRunning">₱0.00</h3>
       </div>
 
-      <div class="card">
-        <small>Items Sold</small>
-        <h3 id="itemsSold">0</h3>
+      <div class="card daily-card">
+        <small>Today's Sales Count</small>
+        <h3 id="daySaleCount">0 sales</h3>
       </div>
 
-      <button class="checkout" onclick="checkout()">
-        Complete Sale
-      </button>
-
+      <div class="btn-group">
+        <button class="checkout" onclick="checkout()">
+          Complete Sale ✓
+        </button>
+        <button class="btn-save-day" onclick="saveDay()">
+          Save &amp; Close Day ☽
+        </button>
+      </div>
     </div>
-
   </div>
 
 </div>
 
-<div class="panel history">
-
-  <div class="sec-head">
-    <h2>Sales History ༉‧₊˚.</h2>
-    <!-- ADDED: Clear History button -->
-    <button class="btn-clear" onclick="clearHistory()">Clear History⸝⸝․ᐟ</button>
+<!-- Bottom: History with Tabs -->
+<div class="panel history-full">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('daily')" id="tab-daily">Daily Records</button>
+    <button class="tab-btn" onclick="switchTab('all')" id="tab-all">All Sales</button>
   </div>
 
-  <div class="history-list" id="historyList">
-
-    <div class="empty">
-      Your completed sales will appear here!
+  <!-- DAILY TAB -->
+  <div class="tab-panel active" id="panel-daily">
+    <div class="sec-head" style="border-top:none;">
+      <h2>Daily Records ༉‧₊˚.</h2>
+      <button class="btn-clear" onclick="clearDays()">Clear Days ⸝⸝․ᐟ</button>
     </div>
-
+    <div class="history-list" id="dailyList">
+      <div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>
+    </div>
   </div>
 
+  <!-- ALL SALES TAB -->
+  <div class="tab-panel" id="panel-all">
+    <div class="sec-head" style="border-top:none;">
+      <h2>All Sales History ༉‧₊˚.</h2>
+      <button class="btn-clear" onclick="clearHistory()">Clear History ⸝⸝․ᐟ</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>
+    </div>
+  </div>
 </div>
 
-</div>
+</div><!-- .app -->
 
 <script>
-
+// ─── State ─────────────────────────────────────────────────────────────────
 let currentSale = [];
-let history = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
+let history     = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
+let dailyDays   = JSON.parse(localStorage.getItem('blue_ledger_days')    || '[]');
+let todaySales  = JSON.parse(localStorage.getItem('blue_ledger_today')   || '[]'); // sales since last "Save Day"
 
-function peso(n){
-  return '₱' + Number(n).toFixed(2);
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function peso(n){ return '₱' + Number(n).toFixed(2); }
+function save(){
+  localStorage.setItem('blue_ledger_history', JSON.stringify(history));
+  localStorage.setItem('blue_ledger_days',    JSON.stringify(dailyDays));
+  localStorage.setItem('blue_ledger_today',   JSON.stringify(todaySales));
 }
 
+// ─── Qty Stepper ───────────────────────────────────────────────────────────
+function changeQty(delta){
+  const el = document.getElementById('itemQty');
+  el.textContent = Math.max(1, (parseInt(el.textContent) || 1) + delta);
+}
+
+// ─── Add Item to Current Sale ──────────────────────────────────────────────
 function addItem(){
-
-  const name = document.getElementById('itemName').value.trim();
+  const name  = document.getElementById('itemName').value.trim();
   const price = parseFloat(document.getElementById('itemPrice').value);
-  const qty = parseInt(document.getElementById('itemQty').textContent);
-
-  if(!name || isNaN(price) || qty < 1){
-    alert('Please complete all fields.');
-    return;
-  }
-
-  currentSale.push({
-    name,
-    price,
-    qty
-  });
-
-  document.getElementById('itemName').value = '';
+  const qty   = parseInt(document.getElementById('itemQty').textContent);
+  if(!name || isNaN(price) || qty < 1){ alert('Please complete all fields.'); return; }
+  currentSale.push({ name, price, qty });
+  document.getElementById('itemName').value  = '';
   document.getElementById('itemPrice').value = '';
   document.getElementById('itemQty').textContent = 1;
-
   renderSale();
 }
 
+// ─── Remove Item ───────────────────────────────────────────────────────────
+function removeItem(i){
+  currentSale.splice(i, 1);
+  renderSale();
+}
+
+// ─── Render Current Sale ───────────────────────────────────────────────────
 function renderSale(){
-
   const wrap = document.getElementById('saleList');
+  document.getElementById('itemCount').textContent = currentSale.length + ' items';
 
-  document.getElementById('itemCount').textContent =
-    currentSale.length + ' items';
+  const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
+  document.getElementById('currentTotal').textContent = peso(total);
+
+  // Today's running total = todaySales already completed + currentSale preview
+  const todayTotal = todaySales.reduce((a,t) => a + t.total, 0) + total;
+  document.getElementById('dayRunning').textContent  = peso(todayTotal);
+  document.getElementById('daySaleCount').textContent = todaySales.length + (currentSale.length ? '+' : '') + ' sales';
 
   if(!currentSale.length){
     wrap.innerHTML = '<div class="empty">Add items for this transaction. (..◜ᴗ◝..)</div>';
     return;
   }
 
-  wrap.innerHTML = currentSale.map(item => `
+  wrap.innerHTML = currentSale.map((item, i) => `
     <div class="sale-row">
-      <div class="sale-info">
-        <h3>${item.name}</h3>
-        <p>${item.qty} × ${peso(item.price)}</p>
+      <div class="sale-row-left">
+        <button class="btn-remove" onclick="removeItem(${i})">✕</button>
+        <div class="sale-info">
+          <h3>${item.name}</h3>
+          <p>${item.qty} × ${peso(item.price)}</p>
+        </div>
       </div>
+      <div class="price">${peso(item.price * item.qty)}</div>
+    </div>
+  `).join('');
+}
 
-      <div class="price">
-        ${peso(item.price * item.qty)}
+// ─── Complete Sale (adds to today + all history) ───────────────────────────
+function checkout(){
+  if(!currentSale.length){ alert('No items added yet.'); return; }
+
+  const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
+  const txn = { date: new Date().toLocaleString(), total, items: [...currentSale] };
+
+  history.unshift(txn);
+  todaySales.push(txn);
+
+  currentSale = [];
+  save();
+  renderSale();
+  renderHistory();
+  renderDaily();
+  renderOverall();
+}
+
+// ─── Save & Close Day ──────────────────────────────────────────────────────
+function saveDay(){
+  // If there's an unsaved sale in progress, complete it first
+  if(currentSale.length){
+    if(!confirm('You have unsaved items. Complete this sale and save the day?')) return;
+    checkout();
+    // checkout already calls saveDay indirectly? No — we just re-enter after:
+    // after checkout() todaySales has one more entry, fall through
+  }
+
+  if(!todaySales.length){ alert('No sales today to save!'); return; }
+
+  const dayTotal = todaySales.reduce((a,t) => a + t.total, 0);
+  const dayItems = todaySales.reduce((s,t) => s + t.items.reduce((a,i) => a + i.qty, 0), 0);
+
+  const dateLabel = new Date().toLocaleDateString('en-PH', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+
+  dailyDays.unshift({
+    date: dateLabel,
+    saved: new Date().toLocaleString(),
+    total: dayTotal,
+    itemsSold: dayItems,
+    transactions: [...todaySales]
+  });
+
+  todaySales = [];
+  save();
+  renderSale();
+  renderDaily();
+  renderOverall();
+
+  alert('Day saved! ☽ Great work today.');
+}
+
+// ─── Render Daily Records ──────────────────────────────────────────────────
+function renderDaily(){
+  const wrap = document.getElementById('dailyList');
+  if(!dailyDays.length){
+    wrap.innerHTML = '<div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>';
+    return;
+  }
+
+  wrap.innerHTML = dailyDays.map((day, di) => `
+    <div class="daily-record collapsed" id="day-${di}">
+      <div class="daily-record-head" onclick="toggleDay(${di})">
+        <span class="daily-record-date">${day.date}</span>
+        <div class="daily-record-meta">
+          <span class="daily-badge">${day.transactions.length} sale${day.transactions.length!==1?'s':''} · ${day.itemsSold} items</span>
+          <span class="daily-total">${peso(day.total)}</span>
+          <span class="collapse-icon">▾</span>
+        </div>
+      </div>
+      <div class="daily-transactions">
+        ${day.transactions.map((txn, ti) => `
+          <div class="daily-txn">
+            <div class="daily-txn-head">
+              <span>${txn.date}</span>
+              <span class="daily-txn-total">${peso(txn.total)}</span>
+            </div>
+            ${txn.items.map(item => `
+              <div style="display:flex;justify-content:space-between;margin-top:4px;color:#6f8297;font-size:.88rem;">
+                <span>${item.name} × ${item.qty}</span>
+                <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
       </div>
     </div>
   `).join('');
 }
 
-function checkout(){
-
-  if(!currentSale.length){
-    alert('No items added yet.');
-    return;
-  }
-
-  const total = currentSale.reduce((a,b)=>
-    a + (b.price * b.qty),0);
-
-  history.unshift({
-    date:new Date().toLocaleString(),
-    total,
-    items:[...currentSale]
-  });
-
-  localStorage.setItem(
-    'blue_ledger_history',
-    JSON.stringify(history)
-  );
-
-  currentSale = [];
-
-  renderSale();
-  renderHistory();
+function toggleDay(di){
+  const el = document.getElementById('day-' + di);
+  el.classList.toggle('collapsed');
 }
 
-// ADDED: Clear History function
-function clearHistory(){
-  if(!history.length){
-    alert('Nothing to clear!');
-    return;
-  }
-  if(!confirm('Clear all sales history? This cannot be undone.')){
-    return;
-  }
-  history = [];
-  localStorage.setItem('blue_ledger_history', JSON.stringify(history));
-  renderHistory();
-}
-
+// ─── Render All History ────────────────────────────────────────────────────
 function renderHistory(){
-
   const wrap = document.getElementById('historyList');
-
-  const revenue = history.reduce((a,b)=>a+b.total,0);
-
-  const itemsSold = history.reduce((sum,txn)=>
-    sum + txn.items.reduce((s,i)=>s+i.qty,0),0);
-
-  document.getElementById('revenue').textContent =
-    peso(revenue);
-
-  document.getElementById('transactions').textContent =
-    history.length;
-
-  document.getElementById('itemsSold').textContent =
-    itemsSold;
-
   if(!history.length){
-    wrap.innerHTML =
-      '<div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>';
+    wrap.innerHTML = '<div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>';
     return;
   }
-
   wrap.innerHTML = history.map(txn => `
     <div class="history-item">
-
       <div class="history-top">
         <span>${txn.date}</span>
         <span class="history-total">${peso(txn.total)}</span>
       </div>
-
       ${txn.items.map(item => `
-        <div style="display:flex;justify-content:space-between;margin-top:6px;color:#6f8297">
+        <div style="display:flex;justify-content:space-between;margin-top:6px;color:#6f8297;font-size:.88rem;">
           <span>${item.name} × ${item.qty}</span>
-          <span>${peso(item.price * item.qty)}</span>
+          <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
         </div>
       `).join('')}
-
     </div>
   `).join('');
 }
 
+// ─── Overall Stats ─────────────────────────────────────────────────────────
+function renderOverall(){
+  const revenue = history.reduce((a,b) => a + b.total, 0);
+  const items   = history.reduce((s,t) => s + t.items.reduce((a,i) => a + i.qty, 0), 0);
+  document.getElementById('overallRevenue').textContent = peso(revenue);
+  document.getElementById('overallTxns').textContent    = history.length;
+  document.getElementById('overallItems').textContent   = items;
+}
+
+// ─── Clear Actions ─────────────────────────────────────────────────────────
+function clearHistory(){
+  if(!history.length){ alert('Nothing to clear!'); return; }
+  if(!confirm('Clear ALL sales history? This cannot be undone.')) return;
+  history = [];
+  save();
+  renderHistory();
+  renderOverall();
+}
+
+function clearDays(){
+  if(!dailyDays.length){ alert('No daily records to clear!'); return; }
+  if(!confirm('Clear all daily records? This cannot be undone.')) return;
+  dailyDays = [];
+  save();
+  renderDaily();
+}
+
+// ─── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
 renderSale();
 renderHistory();
-
-
-// ADDED: Qty stepper function
-function changeQty(delta){
-  const el = document.getElementById('itemQty');
-  const current = parseInt(el.textContent) || 1;
-  const next = Math.max(1, current + delta);
-  el.textContent = next;
-}
+renderDaily();
+renderOverall();
 </script>
-
 </body>
 </html>
