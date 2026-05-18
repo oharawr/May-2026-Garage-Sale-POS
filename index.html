@@ -276,6 +276,20 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
   padding:14px;
 }
 
+.btn-delete-sale{
+  width:24px; height:24px;
+  border-radius:7px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-size:.8rem;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition:.15s;
+  flex-shrink:0;
+}
+.btn-delete-sale:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; }
+
 .history-top{
   display:flex;
   justify-content:space-between;
@@ -737,11 +751,14 @@ function renderHistory(){
     wrap.innerHTML = '<div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>';
     return;
   }
-  wrap.innerHTML = history.map(txn => `
+  wrap.innerHTML = history.map((txn, i) => `
     <div class="history-item">
       <div class="history-top">
         <span>${txn.date}</span>
-        <span class="history-total">${peso(txn.total)}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="history-total">${peso(txn.total)}</span>
+          <button class="btn-delete-sale" onclick="deleteHistorySale(${i})" title="Delete this sale">✕</button>
+        </div>
       </div>
       ${txn.items.map(item => `
         <div style="display:flex;justify-content:space-between;margin-top:6px;color:#6f8297;font-size:.88rem;">
@@ -751,6 +768,15 @@ function renderHistory(){
       `).join('')}
     </div>
   `).join('');
+}
+
+// ─── Delete Single Sale from History ──────────────────────────────────────
+function deleteHistorySale(i){
+  if(!confirm('Delete this sale record? This cannot be undone.')) return;
+  history.splice(i, 1);
+  save();
+  renderHistory();
+  renderOverall();
 }
 
 // ─── Overall Stats ─────────────────────────────────────────────────────────
