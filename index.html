@@ -773,8 +773,13 @@ function renderHistory(){
 // ─── Delete Single Sale from History ──────────────────────────────────────
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
+  const deleted = history[i];
   history.splice(i, 1);
+  // If this sale is also in todaySales, remove it so running total + count update
+  const todayIdx = todaySales.findIndex(t => t.date === deleted.date && t.total === deleted.total);
+  if(todayIdx !== -1) todaySales.splice(todayIdx, 1);
   save();
+  renderSale();
   renderHistory();
   renderOverall();
 }
