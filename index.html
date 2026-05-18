@@ -191,7 +191,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
   font-family:'DM Mono',monospace;
 }
 
-/* Daily summary card highlight */
 .card.daily-card{
   border-color:var(--gold);
   background:var(--gold-light);
@@ -226,7 +225,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 }
 .btn-save-day:hover{ filter:brightness(.95); }
 
-/* Tabs */
 .tabs{
   display:flex;
   gap:0;
@@ -261,7 +259,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 .tab-panel{ display:none; }
 .tab-panel.active{ display:block; }
 
-/* History / Daily lists */
 .history-list{
   padding:18px;
   display:flex;
@@ -299,7 +296,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 .history-total{ font-family:'DM Mono',monospace; color:var(--accent-dark); }
 
-/* Daily record card */
 .daily-record{
   background:white;
   border:1px solid var(--border);
@@ -406,7 +402,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 }
 .qty-btn:hover{ background:var(--accent); color:white; border-color:var(--accent); }
 
-/* Overall stats bar */
 .stats-bar{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -441,13 +436,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 .history-full{ margin-top:20px; }
 
-/* current day indicator */
-.current-day-sale-count{
-  font-size:.75rem;
-  color:var(--gold);
-  font-family:'DM Mono',monospace;
-}
-
 @media(max-width:900px){
   .layout{ grid-template-columns:1fr; }
   .form{ grid-template-columns:1fr; }
@@ -464,7 +452,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
   <p>small sales recorder! 𑣲</p>
 </header>
 
-<!-- Overall Stats Bar -->
 <div class="stats-bar">
   <div class="stat-card">
     <small>Total Revenue</small>
@@ -478,7 +465,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 <div class="layout">
 
-  <!-- LEFT: Transaction Entry -->
   <div class="panel">
     <div class="sec-head">
       <h2>Transaction .☘︎ ́˖</h2>
@@ -510,7 +496,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
     </div>
   </div>
 
-  <!-- RIGHT: Summary + Actions -->
   <div class="panel">
     <div class="sec-head">
       <h2>Current Sale .⋆</h2>
@@ -545,14 +530,12 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 </div>
 
-<!-- Bottom: History with Tabs -->
 <div class="panel history-full">
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('daily')" id="tab-daily">Daily Records</button>
     <button class="tab-btn" onclick="switchTab('all')" id="tab-all">All Sales</button>
   </div>
 
-  <!-- DAILY TAB -->
   <div class="tab-panel active" id="panel-daily">
     <div class="sec-head" style="border-top:none;">
       <h2>Daily Records ༉‧₊˚.</h2>
@@ -563,7 +546,6 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
     </div>
   </div>
 
-  <!-- ALL SALES TAB -->
   <div class="tab-panel" id="panel-all">
     <div class="sec-head" style="border-top:none;">
       <h2>All Sales History ༉‧₊˚.</h2>
@@ -575,14 +557,14 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
   </div>
 </div>
 
-</div><!-- .app -->
+</div>
 
 <script>
 // ─── State ─────────────────────────────────────────────────────────────────
 let currentSale = [];
 let history     = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
 let dailyDays   = JSON.parse(localStorage.getItem('blue_ledger_days')    || '[]');
-let todaySales  = JSON.parse(localStorage.getItem('blue_ledger_today')   || '[]'); // sales since last "Save Day"
+let todaySales  = JSON.parse(localStorage.getItem('blue_ledger_today')   || '[]');
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function peso(n){ return '₱' + Number(n).toFixed(2); }
@@ -592,13 +574,18 @@ function save(){
   localStorage.setItem('blue_ledger_today',   JSON.stringify(todaySales));
 }
 
+function matchTxn(t, target){
+  if(target.id && t.id) return t.id === target.id;
+  return t.date === target.date && Math.abs(t.total - target.total) < 0.001;
+}
+
 // ─── Qty Stepper ───────────────────────────────────────────────────────────
 function changeQty(delta){
   const el = document.getElementById('itemQty');
   el.textContent = Math.max(1, (parseInt(el.textContent) || 1) + delta);
 }
 
-// ─── Add Item to Current Sale ──────────────────────────────────────────────
+// ─── Add Item ──────────────────────────────────────────────────────────────
 function addItem(){
   const name  = document.getElementById('itemName').value.trim();
   const price = parseFloat(document.getElementById('itemPrice').value);
@@ -625,10 +612,12 @@ function renderSale(){
   const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
   document.getElementById('currentTotal').textContent = peso(total);
 
-  // Today's running total = todaySales already completed + currentSale preview
-  const todayTotal = todaySales.reduce((a,t) => a + t.total, 0) + total;
-  document.getElementById('dayRunning').textContent  = peso(todayTotal);
-  document.getElementById('daySaleCount').textContent = todaySales.length + (currentSale.length ? '+' : '') + ' sales';
+  // FIX: Today's running total reads ONLY from todaySales (already saved today)
+  // plus current unsaved sale preview — no stale data leaks in
+  const todayCommitted = todaySales.reduce((a,t) => a + t.total, 0);
+  document.getElementById('dayRunning').textContent  = peso(todayCommitted + total);
+  document.getElementById('daySaleCount').textContent =
+    todaySales.length + (currentSale.length ? '+' : '') + ' sales';
 
   if(!currentSale.length){
     wrap.innerHTML = '<div class="empty">Add items for this transaction. (..◜ᴗ◝..)</div>';
@@ -649,12 +638,17 @@ function renderSale(){
   `).join('');
 }
 
-// ─── Complete Sale (adds to today + all history) ───────────────────────────
+// ─── Complete Sale ─────────────────────────────────────────────────────────
 function checkout(){
   if(!currentSale.length){ alert('No items added yet.'); return; }
 
   const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
-  const txn = { id: Date.now() + Math.random(), date: new Date().toLocaleString(), total, items: [...currentSale] };
+  const txn = {
+    id: Date.now() + Math.random(),
+    date: new Date().toLocaleString(),
+    total,
+    items: [...currentSale]
+  };
 
   history.unshift(txn);
   todaySales.push(txn);
@@ -669,18 +663,24 @@ function checkout(){
 
 // ─── Save & Close Day ──────────────────────────────────────────────────────
 function saveDay(){
-  // If there's an unsaved sale in progress, complete it first
   if(currentSale.length){
     if(!confirm('You have unsaved items. Complete this sale and save the day?')) return;
-    checkout();
-    // checkout already calls saveDay indirectly? No — we just re-enter after:
-    // after checkout() todaySales has one more entry, fall through
+    // Manually complete the in-progress sale without re-triggering saveDay
+    const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
+    const txn = {
+      id: Date.now() + Math.random(),
+      date: new Date().toLocaleString(),
+      total,
+      items: [...currentSale]
+    };
+    history.unshift(txn);
+    todaySales.push(txn);
+    currentSale = [];
   }
 
   if(!todaySales.length){ alert('No sales today to save!'); return; }
 
   const dayTotal = todaySales.reduce((a,t) => a + t.total, 0);
-
   const dateLabel = new Date().toLocaleDateString('en-PH', {
     weekday:'long', year:'numeric', month:'long', day:'numeric'
   });
@@ -695,6 +695,7 @@ function saveDay(){
   todaySales = [];
   save();
   renderSale();
+  renderHistory();
   renderDaily();
   renderOverall();
 
@@ -740,8 +741,7 @@ function renderDaily(){
 }
 
 function toggleDay(di){
-  const el = document.getElementById('day-' + di);
-  el.classList.toggle('collapsed');
+  document.getElementById('day-' + di).classList.toggle('collapsed');
 }
 
 // ─── Render All History ────────────────────────────────────────────────────
@@ -770,36 +770,37 @@ function renderHistory(){
   `).join('');
 }
 
-// ─── Delete Single Sale from History ──────────────────────────────────────
-function matchTxn(t, deleted){
-  if(deleted.id && t.id) return t.id === deleted.id;
-  return t.date === deleted.date && Math.abs(t.total - deleted.total) < 0.001;
-}
-
+// ─── Delete Single Sale ────────────────────────────────────────────────────
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
   const deleted = history[i];
+
+  // 1. Remove from main history
   history.splice(i, 1);
 
-  // Remove from todaySales (unsaved current day)
+  // 2. FIX: Remove from todaySales (unsaved current-day sales)
   const todayIdx = todaySales.findIndex(t => matchTxn(t, deleted));
   if(todayIdx !== -1) todaySales.splice(todayIdx, 1);
 
-  // Remove from saved dailyDays and recalc that day's total
+  // 3. FIX: Remove from saved dailyDays AND recalculate that day's total
   for(const day of dailyDays){
     const txIdx = day.transactions.findIndex(t => matchTxn(t, deleted));
     if(txIdx !== -1){
       day.transactions.splice(txIdx, 1);
+      // Recalculate the day total after removal
       day.total = day.transactions.reduce((a, t) => a + t.total, 0);
       break;
     }
   }
 
+  // 4. FIX: Remove empty days (days with 0 transactions left)
+  dailyDays = dailyDays.filter(day => day.transactions.length > 0);
+
   save();
-  renderSale();
+  renderSale();       // re-renders today's running total from fresh todaySales
   renderHistory();
   renderDaily();
-  renderOverall();
+  renderOverall();    // re-renders from fresh history
 }
 
 // ─── Overall Stats ─────────────────────────────────────────────────────────
@@ -813,8 +814,11 @@ function renderOverall(){
 function clearHistory(){
   if(!history.length){ alert('Nothing to clear!'); return; }
   if(!confirm('Clear ALL sales history? This cannot be undone.')) return;
-  history = [];
+  history    = [];
+  // FIX: also wipe todaySales so Today's Running Total resets to ₱0.00
+  todaySales = [];
   save();
+  renderSale();
   renderHistory();
   renderOverall();
 }
@@ -836,7 +840,6 @@ function switchTab(name){
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
-// Migrate old records that don't have an id yet
 let migrated = false;
 function ensureId(txn){ if(!txn.id){ txn.id = Date.now() + Math.random(); migrated = true; } }
 history.forEach(ensureId);
