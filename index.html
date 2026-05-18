@@ -1,16 +1,269 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sales Tracker</title> <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>"> <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Crimson+Pro:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"> <style> *{ margin:0; padding:0; box-sizing:border-box; } :root{ --bg:#dfeaf7; --panel:#f7fbff; --panel2:#edf4fb; --border:#c7d8ea; --text:#516579; --muted:#8ea4ba; --accent:#84a9d8; --accent-dark:#6e92c2; --green:#8fb6a2; --gold:#c9a96e; --gold-light:#f5ead8; --shadow:0 8px 24px rgba(86,110,136,.12); } body{ background:linear-gradient(to bottom,#dfeaf7,#edf4fb); min-height:100vh; font-family:'Crimson Pro',serif; color:var(--text); padding:24px; } body::before{ content:''; position:fixed; inset:0; background-image:radial-gradient(rgba(132,169,216,.15) 1px,transparent 1px); background-size:24px 24px; pointer-events:none; } .app{ max-width:1200px; margin:auto; } header{ background:rgba(247,251,255,.85); border:1px solid var(--border); border-radius:22px; padding:24px 28px; margin-bottom:20px; backdrop-filter:blur(8px); box-shadow:var(--shadow); } header h1{ font-family:'Playfair Display',serif; font-size:2rem; color:var(--accent-dark); } header p{ margin-top:6px; color:var(--muted); font-size:.95rem; letter-spacing:.04em; } .layout{ display:grid; grid-template-columns:1fr 360px; gap:20px; } .panel{ background:rgba(247,251,255,.82); border:1px solid var(--border); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; backdrop-filter:blur(8px); } .sec-head{ padding:18px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,.5); } .sec-head h2{ font-family:'Playfair Display',serif; color:var(--accent-dark); font-size:1.2rem; } .form{ padding:22px; display:grid; grid-template-columns:1.4fr .8fr .6fr auto; gap:12px; } .field{ display:flex; flex-direction:column; gap:6px; } .field label{ font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-family:'DM Mono',monospace; } .field input{ border:1px solid var(--border); background:white; border-radius:12px; padding:12px; font-size:1rem; color:var(--text); outline:none; } .field input:focus{ border-color:var(--accent); } button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; } .btn-add{ align-self:end; padding:12px 18px; background:var(--accent); color:white; font-family:'Playfair Display',serif; font-size:1rem; } .btn-add:hover{ background:var(--accent-dark); } .sale-list{ padding:18px; display:flex; flex-direction:column; gap:10px; min-height:200px; } .sale-row{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; display:flex; justify-content:space-between; align-items:center; } .sale-row-left{ display:flex; align-items:center; gap:10px; } .sale-info h3{ font-family:'Playfair Display',serif; font-size:1rem; } .sale-info p{ color:var(--muted); margin-top:4px; font-size:.85rem; } .price{ font-family:'DM Mono',monospace; color:var(--accent-dark); } .btn-remove{ width:26px; height:26px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; flex-shrink:0; } .btn-remove:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; } .summary{ padding:22px; display:flex; flex-direction:column; gap:14px; } .card{ background:white; border:1px solid var(--border); border-radius:18px; padding:18px; } .card small{ color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:.65rem; font-family:'DM Mono',monospace; } .card h3{ margin-top:8px; font-size:1rem; color:var(--accent-dark); font-weight:600; font-family:'DM Mono',monospace; } .card.daily-card{ border-color:var(--gold); background:var(--gold-light); } .card.daily-card small{ color:var(--gold); } .card.daily-card h3{ color:#a07840; } .btn-group{ display:flex; flex-direction:column; gap:10px; } .checkout{ width:100%; padding:14px; background:var(--green); color:white; font-size:1rem; font-family:'Playfair Display',serif; } .checkout:hover{ filter:brightness(.95); } .btn-save-day{ width:100%; padding:14px; background:var(--gold); color:white; font-size:1rem; font-family:'Playfair Display',serif; border-radius:14px; border:none; cursor:pointer; transition:.18s; } .btn-save-day:hover{ filter:brightness(.95); } .tabs{ display:flex; gap:0; border-bottom:1px solid var(--border); background:rgba(255,255,255,.5); } .tab-btn{ flex:1; padding:14px 10px; background:transparent; border:none; border-bottom:3px solid transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:.18s; border-radius:0; } .tab-btn.active{ color:var(--accent-dark); border-bottom-color:var(--accent); background:rgba(132,169,216,.07); } .tab-btn:hover:not(.active){ color:var(--accent-dark); background:rgba(132,169,216,.05); } .tab-panel{ display:none; } .tab-panel.active{ display:block; } .history-list{ padding:18px; display:flex; flex-direction:column; gap:12px; } .history-item{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; } .btn-delete-sale{ width:24px; height:24px; border-radius:7px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:.8rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; flex-shrink:0; } .btn-delete-sale:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; } .history-top{ display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; } .history-total{ font-family:'DM Mono',monospace; color:var(--accent-dark); } .daily-record{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; } .daily-record-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; cursor:pointer; user-select:none; } .daily-record-date{ font-family:'Playfair Display',serif; color:var(--accent-dark); font-size:1rem; } .daily-record-meta{ display:flex; align-items:center; gap:10px; } .daily-badge{ font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); } .daily-total{ font-family:'DM Mono',monospace; color:var(--gold); font-weight:500; } .daily-transactions{ padding-top:8px; border-top:1px solid var(--border); } .daily-txn{ margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); } .daily-txn-head{ display:flex; justify-content:space-between; margin-bottom:4px; font-size:.8rem; color:var(--muted); } .daily-txn-total{ font-family:'DM Mono',monospace; } .collapse-icon{ font-size:.7rem; color:var(--muted); transition:.2s; } .daily-record.collapsed .daily-transactions{ display:none; } .daily-record.collapsed .collapse-icon{ transform:rotate(-90deg); } .empty{ text-align:center; color:var(--muted); padding:40px 20px; } .btn-clear{ padding:7px 14px; background:transparent; border:1px solid var(--accent); color:var(--accent-dark); font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.08em; border-radius:10px; cursor:pointer; transition:.18s; } .btn-clear:hover{ background:#eef4fb; border-color:var(--accent-dark); } .qty-stepper{ display:flex; align-items:center; gap:8px; background:white; border:1px solid var(--border); border-radius:12px; padding:8px 12px; justify-content:space-between; } .qty-stepper span{ font-family:'DM Mono',monospace; font-size:.9rem; color:var(--text); min-width:20px; text-align:center; } .qty-btn{ width:26px; height:26px; border-radius:8px; background:var(--panel2); border:1px solid var(--border); color:var(--accent-dark); font-size:1rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; } .qty-btn:hover{ background:var(--accent); color:white; border-color:var(--accent); } .stats-bar{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; } .stat-card{ background:rgba(247,251,255,.9); border:1px solid var(--border); border-radius:18px; padding:16px 20px; box-shadow:var(--shadow); backdrop-filter:blur(8px); } .stat-card small{ color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:.65rem; font-family:'DM Mono',monospace; } .stat-card h3{ margin-top:8px; font-size:1.1rem; color:var(--accent-dark); font-family:'DM Mono',monospace; font-weight:600; } .history-full{ margin-top:20px; } .current-day-sale-count{ font-size:.75rem; color:var(--gold); font-family:'DM Mono',monospace; } @media(max-width:900px){ .layout{ grid-template-columns:1fr; } .form{ grid-template-columns:1fr; } .stats-bar{ grid-template-columns:1fr; } } </style> </head> <body> <div class="app"> <header> <h1>Sales Tracker ⋆˚࿔</h1> <p>small sales recorder! 𑣲</p> </header> <div class="stats-bar"> <div class="stat-card"> <small>Total Revenue</small> <h3 id="overallRevenue">₱0.00</h3> </div> <div class="stat-card"> <small>All Transactions</small> <h3 id="overallTxns">0</h3> </div> </div> <div class="layout"> <div class="panel"> <div class="sec-head"> <h2>Transaction .☘︎ ́˖</h2> <span id="itemCount">0 items</span> </div> <div class="form"> <div class="field"> <label>Item Name</label> <input type="text" id="itemName" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="Item Name"> </div> <div class="field"> <label>Price</label> <input type="number" id="itemPrice" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="0.00"> </div> <div class="field"> <label>Qty</label> <div class="qty-stepper"> <button class="qty-btn" onclick="changeQty(-1)">&#8722;</button> <span id="itemQty">1</span> <button class="qty-btn" onclick="changeQty(1)">+</button> </div> </div> <button class="btn-add" onclick="addItem()">Add</button> </div> <div class="sale-list" id="saleList"> <div class="empty">Add items for this transaction</div> </div> </div> <div class="panel"> <div class="sec-head"> <h2>Current Sale .⋆</h2> </div> <div class="summary"> <div class="card"> <small>This Sale</small> <h3 id="currentTotal">₱0.00</h3> </div>  <div class="btn-group"> <button class="checkout" onclick="checkout()"> Complete Sale ✓ </button> <button class="btn-save-day" onclick="saveDay()"> Save &amp; Close Day ☽ </button> </div> </div> </div> </div> <div class="panel history-full"> <div class="tabs"> <button class="tab-btn active" onclick="switchTab('daily')" id="tab-daily">Daily Records</button> <button class="tab-btn" onclick="switchTab('all')" id="tab-all">All Sales</button> </div> <div class="tab-panel active" id="panel-daily"> <div class="sec-head" style="border-top:none;"> <h2>Daily Records ༉‧₊˚.</h2> <button class="btn-clear" onclick="clearDays()">Clear Days ⸝⸝․ᐟ</button> </div> <div class="history-list" id="dailyList"> <div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div> </div> </div> <div class="tab-panel" id="panel-all"> <div class="sec-head" style="border-top:none;"> <h2>All Sales History ༉‧₊˚.</h2> <button class="btn-clear" onclick="clearHistory()">Clear History ⸝⸝․ᐟ</button> </div> <div class="history-list" id="historyList"> <div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div> </div> </div> </div> </div> <script> // ─── State ────────────────────────────────────────────────────────────────
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Crimson+Pro:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --bg:#dfeaf7; --panel:#f7fbff; --panel2:#edf4fb; --border:#c7d8ea;
+  --text:#516579; --muted:#8ea4ba; --accent:#84a9d8; --accent-dark:#6e92c2;
+  --green:#8fb6a2; --gold:#c9a96e; --gold-light:#f5ead8;
+  --shadow:0 8px 24px rgba(86,110,136,.12);
+}
+body{
+  background:linear-gradient(to bottom,#dfeaf7,#edf4fb);
+  min-height:100vh; font-family:'Crimson Pro',serif; color:var(--text); padding:24px;
+}
+body::before{
+  content:''; position:fixed; inset:0;
+  background-image:radial-gradient(rgba(132,169,216,.15) 1px,transparent 1px);
+  background-size:24px 24px; pointer-events:none;
+}
+.app{ max-width:1200px; margin:auto; }
+header{
+  background:rgba(247,251,255,.85); border:1px solid var(--border); border-radius:22px;
+  padding:24px 28px; margin-bottom:20px; backdrop-filter:blur(8px); box-shadow:var(--shadow);
+}
+header h1{ font-family:'Playfair Display',serif; font-size:2rem; color:var(--accent-dark); }
+header p{ margin-top:6px; color:var(--muted); font-size:.95rem; letter-spacing:.04em; }
+.layout{ display:grid; grid-template-columns:1fr 360px; gap:20px; }
+.panel{
+  background:rgba(247,251,255,.82); border:1px solid var(--border); border-radius:22px;
+  box-shadow:var(--shadow); overflow:hidden; backdrop-filter:blur(8px);
+}
+.sec-head{
+  padding:18px 22px; border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(255,255,255,.5);
+}
+.sec-head h2{ font-family:'Playfair Display',serif; color:var(--accent-dark); font-size:1.2rem; }
+.form{ padding:22px; display:grid; grid-template-columns:1.4fr .8fr .6fr auto; gap:12px; }
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-size:.72rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-family:'DM Mono',monospace; }
+.field input{ border:1px solid var(--border); background:white; border-radius:12px; padding:12px; font-size:1rem; color:var(--text); outline:none; }
+.field input:focus{ border-color:var(--accent); }
+button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
+.btn-add{ align-self:end; padding:12px 18px; background:var(--accent); color:white; font-family:'Playfair Display',serif; font-size:1rem; }
+.btn-add:hover{ background:var(--accent-dark); }
+.sale-list{ padding:18px; display:flex; flex-direction:column; gap:10px; min-height:200px; }
+.sale-row{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; display:flex; justify-content:space-between; align-items:center; }
+.sale-row-left{ display:flex; align-items:center; gap:10px; }
+.sale-info h3{ font-family:'Playfair Display',serif; font-size:1rem; }
+.sale-info p{ color:var(--muted); margin-top:4px; font-size:.85rem; }
+.price{ font-family:'DM Mono',monospace; color:var(--accent-dark); }
+.btn-remove{ width:26px; height:26px; border-radius:8px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; flex-shrink:0; }
+.btn-remove:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; }
+.summary{ padding:22px; display:flex; flex-direction:column; gap:14px; }
+.card{ background:white; border:1px solid var(--border); border-radius:18px; padding:18px; }
+.card small{ color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:.65rem; font-family:'DM Mono',monospace; }
+.card h3{ margin-top:8px; font-size:1rem; color:var(--accent-dark); font-weight:600; font-family:'DM Mono',monospace; }
+.btn-group{ display:flex; flex-direction:column; gap:10px; }
+.checkout{ width:100%; padding:14px; background:var(--green); color:white; font-size:1rem; font-family:'Playfair Display',serif; }
+.checkout:hover{ filter:brightness(.95); }
+.btn-save-day{ width:100%; padding:14px; background:var(--gold); color:white; font-size:1rem; font-family:'Playfair Display',serif; border-radius:14px; border:none; cursor:pointer; transition:.18s; }
+.btn-save-day:hover{ filter:brightness(.95); }
+.tabs{ display:flex; gap:0; border-bottom:1px solid var(--border); background:rgba(255,255,255,.5); }
+.tab-btn{ flex:1; padding:14px 10px; background:transparent; border:none; border-bottom:3px solid transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:.18s; border-radius:0; }
+.tab-btn.active{ color:var(--accent-dark); border-bottom-color:var(--accent); background:rgba(132,169,216,.07); }
+.tab-btn:hover:not(.active){ color:var(--accent-dark); background:rgba(132,169,216,.05); }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+.history-list{ padding:18px; display:flex; flex-direction:column; gap:12px; }
+.history-item{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; }
+.btn-delete-sale{ width:24px; height:24px; border-radius:7px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:.8rem; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; flex-shrink:0; }
+.btn-delete-sale:hover{ background:#fdeaea; border-color:#e4a0a0; color:#c47a7a; }
+.history-top{ display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; }
+.history-total{ font-family:'DM Mono',monospace; color:var(--accent-dark); }
+.daily-record{ background:white; border:1px solid var(--border); border-radius:16px; padding:14px; }
+.daily-record-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; cursor:pointer; user-select:none; }
+.daily-record-date{ font-family:'Playfair Display',serif; color:var(--accent-dark); font-size:1rem; }
+.daily-record-meta{ display:flex; align-items:center; gap:10px; }
+.daily-badge{ font-family:'DM Mono',monospace; font-size:.7rem; color:var(--muted); }
+.daily-total{ font-family:'DM Mono',monospace; color:var(--gold); font-weight:500; }
+.daily-transactions{ padding-top:8px; border-top:1px solid var(--border); }
+.daily-txn{ margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); }
+.daily-txn-head{ display:flex; justify-content:space-between; margin-bottom:4px; font-size:.8rem; color:var(--muted); }
+.daily-txn-total{ font-family:'DM Mono',monospace; }
+.collapse-icon{ font-size:.7rem; color:var(--muted); transition:.2s; }
+.daily-record.collapsed .daily-transactions{ display:none; }
+.daily-record.collapsed .collapse-icon{ transform:rotate(-90deg); }
+.empty{ text-align:center; color:var(--muted); padding:40px 20px; }
+.btn-clear{ padding:7px 14px; background:transparent; border:1px solid var(--accent); color:var(--accent-dark); font-family:'DM Mono',monospace; font-size:.72rem; letter-spacing:.08em; border-radius:10px; cursor:pointer; transition:.18s; }
+.btn-clear:hover{ background:#eef4fb; border-color:var(--accent-dark); }
+.qty-stepper{ display:flex; align-items:center; gap:8px; background:white; border:1px solid var(--border); border-radius:12px; padding:8px 12px; justify-content:space-between; }
+.qty-stepper span{ font-family:'DM Mono',monospace; font-size:.9rem; color:var(--text); min-width:20px; text-align:center; }
+.qty-btn{ width:26px; height:26px; border-radius:8px; background:var(--panel2); border:1px solid var(--border); color:var(--accent-dark); font-size:1rem; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s; }
+.qty-btn:hover{ background:var(--accent); color:white; border-color:var(--accent); }
+.stats-bar{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:20px; }
+.stat-card{ background:rgba(247,251,255,.9); border:1px solid var(--border); border-radius:18px; padding:16px 20px; box-shadow:var(--shadow); backdrop-filter:blur(8px); }
+.stat-card small{ color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:.65rem; font-family:'DM Mono',monospace; }
+.stat-card h3{ margin-top:8px; font-size:1.1rem; color:var(--accent-dark); font-family:'DM Mono',monospace; font-weight:600; }
+.history-full{ margin-top:20px; }
+@media(max-width:900px){
+  .layout{ grid-template-columns:1fr; }
+  .form{ grid-template-columns:1fr; }
+  .stats-bar{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Sales Tracker ⋆˚࿔</h1>
+    <p>small sales recorder! 𑣲</p>
+  </header>
+  <div class="stats-bar">
+    <div class="stat-card"><small>Total Revenue</small><h3 id="overallRevenue">₱0.00</h3></div>
+    <div class="stat-card"><small>All Transactions</small><h3 id="overallTxns">0</h3></div>
+  </div>
+  <div class="layout">
+    <div class="panel">
+      <div class="sec-head">
+        <h2>Transaction .☘︎ ́˖</h2>
+        <span id="itemCount">0 items</span>
+      </div>
+      <div class="form">
+        <div class="field">
+          <label>Item Name</label>
+          <input type="text" id="itemName" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="Item Name">
+        </div>
+        <div class="field">
+          <label>Price</label>
+          <input type="number" id="itemPrice" style="font-family:'DM Mono',monospace;font-style:italic;font-size:.70rem;" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label>Qty</label>
+          <div class="qty-stepper">
+            <button class="qty-btn" onclick="changeQty(-1)">&#8722;</button>
+            <span id="itemQty">1</span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+        <button class="btn-add" onclick="addItem()">Add</button>
+      </div>
+      <div class="sale-list" id="saleList">
+        <div class="empty">Add items for this transaction</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h2>Current Sale .⋆</h2></div>
+      <div class="summary">
+        <div class="card"><small>This Sale</small><h3 id="currentTotal">₱0.00</h3></div>
+        <div class="btn-group">
+          <button class="checkout" onclick="checkout()">Complete Sale ✓</button>
+          <button class="btn-save-day" onclick="saveDay()">Save &amp; Close Day ☽</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel history-full">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('daily')" id="tab-daily">Daily Records</button>
+      <button class="tab-btn" onclick="switchTab('all')" id="tab-all">All Sales</button>
+    </div>
+    <div class="tab-panel active" id="panel-daily">
+      <div class="sec-head" style="border-top:none;">
+        <h2>Daily Records ༉‧₊˚.</h2>
+        <button class="btn-clear" onclick="clearDays()">Clear Days ⸝⸝․ᐟ</button>
+      </div>
+      <div class="history-list" id="dailyList">
+        <div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-all">
+      <div class="sec-head" style="border-top:none;">
+        <h2>All Sales History ༉‧₊˚.</h2>
+        <button class="btn-clear" onclick="clearHistory()">Clear History ⸝⸝․ᐟ</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────
+// DATA MODEL (single source of truth):
+//   history      — all completed transactions, each with a dayKey (YYYY-MM-DD)
+//   closedDays   — set of dayKeys that have been "saved & closed"
+//   currentSale  — items being built for the next checkout (not persisted between reloads beyond sessionStorage)
+//
+// Daily Records are DERIVED from history filtered by closedDays.
+// Deleting from history = permanently gone from everywhere.
+
 let currentSale = [];
-let history = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
-let dailyDays = JSON.parse(localStorage.getItem('blue_ledger_days') || '[]');
-let todaySales = JSON.parse(localStorage.getItem('blue_ledger_today') || '[]');
+
+let history     = JSON.parse(localStorage.getItem('sl_history')     || '[]');
+let closedDays  = JSON.parse(localStorage.getItem('sl_closedDays')  || '[]'); // array of dayKey strings
+
+// Migrate old data from previous storage keys if present
+(function migrate(){
+  const oldH = localStorage.getItem('blue_ledger_history');
+  const oldD = localStorage.getItem('blue_ledger_days');
+  if(!oldH && !oldD) return;
+
+  if(oldH){
+    const parsed = JSON.parse(oldH);
+    parsed.forEach(t => {
+      if(!t.id) t.id = Date.now() + Math.random();
+      // Try to parse the date string to get a dayKey
+      const d = new Date(t.date);
+      t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
+      // Only add if not already present
+      if(!history.find(x => x.id === t.id)) history.push(t);
+    });
+  }
+  if(oldD){
+    const parsed = JSON.parse(oldD);
+    parsed.forEach(day => {
+      // Mark each transaction's day as closed based on saved date
+      day.transactions.forEach(t => {
+        if(!t.id) t.id = Date.now() + Math.random();
+        const d = new Date(t.date);
+        t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
+        if(!history.find(x => x.id === t.id)) history.push(t);
+        // Mark day as closed
+        if(!closedDays.includes(t.dayKey)) closedDays.push(t.dayKey);
+      });
+    });
+  }
+
+  // Remove old keys
+  localStorage.removeItem('blue_ledger_history');
+  localStorage.removeItem('blue_ledger_days');
+  localStorage.removeItem('blue_ledger_today');
+  save();
+})();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function peso(n){ return '₱' + Number(n).toFixed(2); }
 
+function fmtKey(d){ return d.toISOString().slice(0,10); }
+function todayKey(){ return fmtKey(new Date()); }
+
 function save(){
-  localStorage.setItem('blue_ledger_history', JSON.stringify(history));
-  localStorage.setItem('blue_ledger_days', JSON.stringify(dailyDays));
-  localStorage.setItem('blue_ledger_today', JSON.stringify(todaySales));
+  localStorage.setItem('sl_history',    JSON.stringify(history));
+  localStorage.setItem('sl_closedDays', JSON.stringify(closedDays));
+}
+
+// ─── Derive daily groups from history ────────────────────────────────────
+// Returns array of { dayKey, dateLabel, transactions, total } for closed days only,
+// sorted newest first. Only includes days that still have at least one transaction.
+function getDailyGroups(){
+  const groups = {};
+  for(const txn of history){
+    const k = txn.dayKey || todayKey();
+    if(!closedDays.includes(k)) continue;
+    if(!groups[k]) groups[k] = { dayKey:k, dateLabel:txn.dayLabel || k, transactions:[], total:0 };
+    groups[k].transactions.push(txn);
+    groups[k].total += txn.total;
+  }
+  return Object.values(groups).sort((a,b) => b.dayKey.localeCompare(a.dayKey));
 }
 
 // ─── Qty Stepper ──────────────────────────────────────────────────────────
@@ -21,30 +274,26 @@ function changeQty(delta){
 
 // ─── Add Item ─────────────────────────────────────────────────────────────
 function addItem(){
-  const name = document.getElementById('itemName').value.trim();
+  const name  = document.getElementById('itemName').value.trim();
   const price = parseFloat(document.getElementById('itemPrice').value);
-  const qty = parseInt(document.getElementById('itemQty').textContent);
+  const qty   = parseInt(document.getElementById('itemQty').textContent);
   if(!name || isNaN(price) || qty < 1){ alert('Please complete all fields.'); return; }
   currentSale.push({ name, price, qty });
-  document.getElementById('itemName').value = '';
+  document.getElementById('itemName').value  = '';
   document.getElementById('itemPrice').value = '';
   document.getElementById('itemQty').textContent = 1;
   renderSale();
 }
 
-// ─── Remove Item ──────────────────────────────────────────────────────────
+// ─── Remove Item from current build ───────────────────────────────────────
 function removeItem(i){ currentSale.splice(i, 1); renderSale(); }
 
 // ─── Render Current Sale ──────────────────────────────────────────────────
 function renderSale(){
-  const wrap = document.getElementById('saleList');
-  document.getElementById('itemCount').textContent = currentSale.length + ' items';
+  const wrap  = document.getElementById('saleList');
   const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
+  document.getElementById('itemCount').textContent    = currentSale.length + ' items';
   document.getElementById('currentTotal').textContent = peso(total);
-
-  // FIX: today running total always derives fresh from todaySales array
-  const todayTotal = todaySales.reduce((a,t) => a + t.total, 0) + total;
-
   if(!currentSale.length){
     wrap.innerHTML = '<div class="empty">Add items for this transaction. (..◜ᴗ◝..)</div>';
     return;
@@ -63,24 +312,23 @@ function renderSale(){
   `).join('');
 }
 
-// ─── Complete Sale ────────────────────────────────────────────────────────
+// ─── Complete Sale (checkout) ─────────────────────────────────────────────
 function checkout(){
   if(!currentSale.length){ alert('No items added yet.'); return; }
+  const now   = new Date();
   const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
   const txn = {
-    id: Date.now() + Math.random(),
-    date: new Date().toLocaleString(),
+    id:       Date.now() + Math.random(),
+    date:     now.toLocaleString(),
+    dayKey:   fmtKey(now),
+    dayLabel: now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' }),
     total,
     items: [...currentSale]
   };
   history.unshift(txn);
-  todaySales.push(txn);
   currentSale = [];
   save();
-  renderSale();
-  renderHistory();
-  renderDaily();
-  renderOverall();
+  renderAll();
 }
 
 // ─── Save & Close Day ─────────────────────────────────────────────────────
@@ -89,65 +337,14 @@ function saveDay(){
     if(!confirm('You have unsaved items. Complete this sale and save the day?')) return;
     checkout();
   }
-  if(!todaySales.length){ alert('No sales today to save!'); return; }
-  const dayTotal = todaySales.reduce((a,t) => a + t.total, 0);
-  const dateLabel = new Date().toLocaleDateString('en-PH', {
-    weekday:'long', year:'numeric', month:'long', day:'numeric'
-  });
-  dailyDays.unshift({
-    date: dateLabel,
-    saved: new Date().toLocaleString(),
-    total: dayTotal,
-    transactions: [...todaySales]
-  });
-  todaySales = [];
+  const key = todayKey();
+  const todayTxns = history.filter(t => t.dayKey === key);
+  if(!todayTxns.length){ alert('No sales today to save!'); return; }
+  if(closedDays.includes(key)){ alert('Today\'s records are already saved!'); return; }
+  closedDays.push(key);
   save();
-  renderSale();
-  renderDaily();
-  renderOverall();
+  renderAll();
   alert('Day saved! ☽ Great work today.');
-}
-
-// ─── Render Daily Records ─────────────────────────────────────────────────
-function renderDaily(){
-  const wrap = document.getElementById('dailyList');
-  if(!dailyDays.length){
-    wrap.innerHTML = '<div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>';
-    return;
-  }
-  wrap.innerHTML = dailyDays.map((day, di) => `
-    <div class="daily-record collapsed" id="day-${di}">
-      <div class="daily-record-head" onclick="toggleDay(${di})">
-        <span class="daily-record-date">${day.date}</span>
-        <div class="daily-record-meta">
-          <span class="daily-badge">${day.transactions.length} sale${day.transactions.length!==1?'s':''}</span>
-          <span class="daily-total">${peso(day.total)}</span>
-          <span class="collapse-icon">▾</span>
-        </div>
-      </div>
-      <div class="daily-transactions">
-        ${day.transactions.map(txn => `
-          <div class="daily-txn">
-            <div class="daily-txn-head">
-              <span>${txn.date}</span>
-              <span class="daily-txn-total">${peso(txn.total)}</span>
-            </div>
-            ${txn.items.map(item => `
-              <div style="display:flex;justify-content:space-between;margin-top:4px;color:#6f8297;font-size:.88rem;">
-                <span>${item.name} × ${item.qty}</span>
-                <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
-              </div>
-            `).join('')}
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
-}
-
-function toggleDay(di){
-  const el = document.getElementById('day-' + di);
-  el.classList.toggle('collapsed');
 }
 
 // ─── Render All History ───────────────────────────────────────────────────
@@ -176,72 +373,88 @@ function renderHistory(){
   `).join('');
 }
 
-// ─── Delete Single Sale ───────────────────────────────────────────────────
-function matchTxn(t, deleted){
-  if(deleted.id && t.id) return t.id === deleted.id;
-  return t.date === deleted.date && Math.abs(t.total - deleted.total) < 0.001;
-}
-
+// ─── Delete a Single Sale — permanently removes from history ──────────────
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
   const deleted = history[i];
   history.splice(i, 1);
 
-  // FIX: remove from todaySales (unsaved current-day accumulator)
-  const todayIdx = todaySales.findIndex(t => matchTxn(t, deleted));
-  if(todayIdx !== -1) todaySales.splice(todayIdx, 1);
-
-  // FIX: remove from saved dailyDays and recalc that day's total
-  for(const day of dailyDays){
-    const txIdx = day.transactions.findIndex(t => matchTxn(t, deleted));
-    if(txIdx !== -1){
-      day.transactions.splice(txIdx, 1);
-      // FIX: if the day now has no transactions, remove it entirely
-      if(day.transactions.length === 0){
-        const dayIdx = dailyDays.indexOf(day);
-        dailyDays.splice(dayIdx, 1);
-      } else {
-        day.total = day.transactions.reduce((a, t) => a + t.total, 0);
-      }
-      break;
+  // If that day's key is closed but now has zero transactions, remove it from closedDays
+  // so it won't show as an empty daily record
+  const dayKey = deleted.dayKey;
+  if(closedDays.includes(dayKey)){
+    const remaining = history.filter(t => t.dayKey === dayKey);
+    if(remaining.length === 0){
+      closedDays = closedDays.filter(k => k !== dayKey);
     }
   }
 
   save();
-  renderHistory();
-  renderDaily();
-  renderOverall();
+  renderAll();
+}
+
+// ─── Render Daily Records (derived — never stale) ─────────────────────────
+function renderDaily(){
+  const wrap  = document.getElementById('dailyList');
+  const groups = getDailyGroups();
+  if(!groups.length){
+    wrap.innerHTML = '<div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>';
+    return;
+  }
+  wrap.innerHTML = groups.map((day, di) => `
+    <div class="daily-record collapsed" id="day-${di}">
+      <div class="daily-record-head" onclick="toggleDay(${di})">
+        <span class="daily-record-date">${day.dateLabel}</span>
+        <div class="daily-record-meta">
+          <span class="daily-badge">${day.transactions.length} sale${day.transactions.length!==1?'s':''}</span>
+          <span class="daily-total">${peso(day.total)}</span>
+          <span class="collapse-icon">▾</span>
+        </div>
+      </div>
+      <div class="daily-transactions">
+        ${day.transactions.map(txn => `
+          <div class="daily-txn">
+            <div class="daily-txn-head">
+              <span>${txn.date}</span>
+              <span class="daily-txn-total">${peso(txn.total)}</span>
+            </div>
+            ${txn.items.map(item => `
+              <div style="display:flex;justify-content:space-between;margin-top:4px;color:#6f8297;font-size:.88rem;">
+                <span>${item.name} × ${item.qty}</span>
+                <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDay(di){
+  document.getElementById('day-' + di).classList.toggle('collapsed');
 }
 
 // ─── Overall Stats ────────────────────────────────────────────────────────
 function renderOverall(){
-  // FIX: overall revenue = all saved history entries (single source of truth)
-  const revenue = history.reduce((a,b) => a + b.total, 0);
-  document.getElementById('overallRevenue').textContent = peso(revenue);
-  document.getElementById('overallTxns').textContent = history.length;
+  document.getElementById('overallRevenue').textContent = peso(history.reduce((a,b) => a + b.total, 0));
+  document.getElementById('overallTxns').textContent    = history.length;
 }
 
 // ─── Clear Actions ────────────────────────────────────────────────────────
 function clearHistory(){
   if(!history.length){ alert('Nothing to clear!'); return; }
   if(!confirm('Clear ALL sales history? This cannot be undone.')) return;
-
-  // FIX: wipe all three stores so no ghost data remains anywhere
-  history = [];
-  todaySales = [];
-  dailyDays = [];
-
+  history    = [];
+  closedDays = [];
   save();
-  renderSale();
-  renderHistory();
-  renderDaily();
-  renderOverall();
+  renderAll();
 }
 
 function clearDays(){
-  if(!dailyDays.length){ alert('No daily records to clear!'); return; }
-  if(!confirm('Clear all daily records? This cannot be undone.')) return;
-  dailyDays = [];
+  if(!closedDays.length){ alert('No daily records to clear!'); return; }
+  if(!confirm('Clear all daily records? Sales history will remain. This cannot be undone.')) return;
+  closedDays = [];
   save();
   renderDaily();
 }
@@ -254,18 +467,16 @@ function switchTab(name){
   document.getElementById('panel-' + name).classList.add('active');
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────
-let migrated = false;
-function ensureId(txn){
-  if(!txn.id){ txn.id = Date.now() + Math.random(); migrated = true; }
+// ─── Render Everything ────────────────────────────────────────────────────
+function renderAll(){
+  renderSale();
+  renderHistory();
+  renderDaily();
+  renderOverall();
 }
-history.forEach(ensureId);
-todaySales.forEach(ensureId);
-dailyDays.forEach(day => day.transactions.forEach(ensureId));
-if(migrated) save();
 
-renderSale();
-renderHistory();
-renderDaily();
-renderOverall();
-</script> </body> </html>
+// ─── Init ─────────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
