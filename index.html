@@ -654,7 +654,7 @@ function checkout(){
   if(!currentSale.length){ alert('No items added yet.'); return; }
 
   const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
-  const txn = { date: new Date().toLocaleString(), total, items: [...currentSale] };
+  const txn = { id: Date.now() + Math.random(), date: new Date().toLocaleString(), total, items: [...currentSale] };
 
   history.unshift(txn);
   todaySales.push(txn);
@@ -771,26 +771,23 @@ function renderHistory(){
 }
 
 // ─── Delete Single Sale from History ──────────────────────────────────────
+function matchTxn(t, deleted){
+  if(deleted.id && t.id) return t.id === deleted.id;
+  return t.date === deleted.date && Math.abs(t.total - deleted.total) < 0.001;
+}
+
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
   const deleted = history[i];
   history.splice(i, 1);
 
-  // Remove from todaySales (unsaved current day) if present
-  const todayIdx = todaySales.findIndex(t =>
-    t.date === deleted.date &&
-    Math.abs(t.total - deleted.total) < 0.001 &&
-    JSON.stringify(t.items) === JSON.stringify(deleted.items)
-  );
+  // Remove from todaySales (unsaved current day)
+  const todayIdx = todaySales.findIndex(t => matchTxn(t, deleted));
   if(todayIdx !== -1) todaySales.splice(todayIdx, 1);
 
-  // Also remove from any saved dailyDays record and recalculate that day's total
+  // Remove from saved dailyDays and recalc that day's total
   for(const day of dailyDays){
-    const txIdx = day.transactions.findIndex(t =>
-      t.date === deleted.date &&
-      Math.abs(t.total - deleted.total) < 0.001 &&
-      JSON.stringify(t.items) === JSON.stringify(deleted.items)
-    );
+    const txIdx = day.transactions.findIndex(t => matchTxn(t, deleted));
     if(txIdx !== -1){
       day.transactions.splice(txIdx, 1);
       day.total = day.transactions.reduce((a, t) => a + t.total, 0);
@@ -839,6 +836,14 @@ function switchTab(name){
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
+// Migrate old records that don't have an id yet
+let migrated = false;
+function ensureId(txn){ if(!txn.id){ txn.id = Date.now() + Math.random(); migrated = true; } }
+history.forEach(ensureId);
+todaySales.forEach(ensureId);
+dailyDays.forEach(day => day.transactions.forEach(ensureId));
+if(migrated) save();
+
 renderSale();
 renderHistory();
 renderDaily();
