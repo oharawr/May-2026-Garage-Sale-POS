@@ -103,6 +103,12 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 .stat-card small{ color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-size:.65rem; font-family:'DM Mono',monospace; }
 .stat-card h3{ margin-top:8px; font-size:1.1rem; color:var(--accent-dark); font-family:'DM Mono',monospace; font-weight:600; }
 .history-full{ margin-top:20px; }
+.locked-badge{
+  font-size:.6rem; font-family:'DM Mono',monospace;
+  background:var(--gold-light); color:var(--gold);
+  border:1px solid #e8d5b0; border-radius:6px;
+  padding:2px 7px; letter-spacing:.06em; text-transform:uppercase;
+}
 @media(max-width:900px){
   .layout{ grid-template-columns:1fr; }
   .form{ grid-template-columns:1fr; }
@@ -188,160 +194,182 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 
 <script>
 // ─── State ────────────────────────────────────────────────────────────────
-// DATA MODEL (single source of truth):
-//   history      — all completed transactions, each with a dayKey (YYYY-MM-DD)
-//   closedDays   — set of dayKeys that have been "saved & closed"
-//   currentSale  — items being built for the next checkout (not persisted between reloads beyond sessionStorage)
+// DATA MODEL:
 //
-// Daily Records are DERIVED from history filtered by closedDays.
-// Deleting from history = permanently gone from everywhere.
+//   history    — all completed transactions. Freely deletable / clearable.
+//
+//   lockedDays — permanent daily snapshots created by "Save & Close Day".
+//                A deep copy of all transactions for that day is stored here
+//                at the moment of saving. These are NEVER touched by
+//                clearHistory() or deleteHistorySale() — only clearDays().
+//
+//   currentSale — items being built right now (in-memory only).
 
-let currentSale = [];
+var currentSale = [];
+var history     = JSON.parse(localStorage.getItem('sl2_history')    || '[]');
+var lockedDays  = JSON.parse(localStorage.getItem('sl2_lockedDays') || '[]');
 
-let history     = JSON.parse(localStorage.getItem('sl_history')     || '[]');
-let closedDays  = JSON.parse(localStorage.getItem('sl_closedDays')  || '[]'); // array of dayKey strings
-
-// Migrate old data from previous storage keys if present
+// ── one-time migration from older storage keys ────────────────────────────
 (function migrate(){
-  const oldH = localStorage.getItem('blue_ledger_history');
-  const oldD = localStorage.getItem('blue_ledger_days');
-  if(!oldH && !oldD) return;
+  var oldKeys = ['sl_history','sl_lockedDays','sl_closedDays',
+                 'blue_ledger_history','blue_ledger_days','blue_ledger_today'];
+  var hasOld = oldKeys.some(function(k){ return localStorage.getItem(k); });
+  if(!hasOld) return;
 
-  if(oldH){
-    const parsed = JSON.parse(oldH);
-    parsed.forEach(t => {
-      if(!t.id) t.id = Date.now() + Math.random();
-      // Try to parse the date string to get a dayKey
-      const d = new Date(t.date);
-      t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
-      // Only add if not already present
-      if(!history.find(x => x.id === t.id)) history.push(t);
+  ['sl_history','blue_ledger_history'].forEach(function(k){
+    var raw = localStorage.getItem(k);
+    if(!raw) return;
+    JSON.parse(raw).forEach(function(t){
+      if(!t.id) t.id = uid();
+      var d = new Date(t.date);
+      if(!t.dayKey) t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
+      if(!t.dayLabel) t.dayLabel = labelFromKey(t.dayKey);
+      if(!history.find(function(x){ return x.id === t.id; })) history.push(t);
     });
-  }
-  if(oldD){
-    const parsed = JSON.parse(oldD);
-    parsed.forEach(day => {
-      // Mark each transaction's day as closed based on saved date
-      day.transactions.forEach(t => {
-        if(!t.id) t.id = Date.now() + Math.random();
-        const d = new Date(t.date);
-        t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
-        if(!history.find(x => x.id === t.id)) history.push(t);
-        // Mark day as closed
-        if(!closedDays.includes(t.dayKey)) closedDays.push(t.dayKey);
+  });
+
+  ['sl_lockedDays','blue_ledger_days'].forEach(function(k){
+    var raw = localStorage.getItem(k);
+    if(!raw) return;
+    JSON.parse(raw).forEach(function(day){
+      var txns = (day.transactions || []).map(function(t){
+        if(!t.id) t.id = uid();
+        var d = new Date(t.date);
+        if(!t.dayKey) t.dayKey = isNaN(d) ? todayKey() : fmtKey(d);
+        if(!t.dayLabel) t.dayLabel = labelFromKey(t.dayKey);
+        return t;
+      });
+      var dayKey = day.dayKey || (txns[0] && txns[0].dayKey) || todayKey();
+      if(!lockedDays.find(function(d){ return d.dayKey === dayKey; })){
+        lockedDays.unshift({
+          dayKey: dayKey,
+          dateLabel: day.dateLabel || day.date || labelFromKey(dayKey),
+          saved: day.saved || new Date().toLocaleString(),
+          total: day.total || txns.reduce(function(a,t){ return a+t.total; }, 0),
+          transactions: txns
+        });
+      }
+    });
+  });
+
+  var rawClosed = localStorage.getItem('sl_closedDays');
+  if(rawClosed){
+    JSON.parse(rawClosed).forEach(function(key){
+      if(lockedDays.find(function(d){ return d.dayKey === key; })) return;
+      var txns = history.filter(function(t){ return t.dayKey === key; });
+      if(!txns.length) return;
+      lockedDays.unshift({
+        dayKey: key,
+        dateLabel: (txns[0] && txns[0].dayLabel) || labelFromKey(key),
+        saved: new Date().toLocaleString(),
+        total: txns.reduce(function(a,t){ return a+t.total; }, 0),
+        transactions: JSON.parse(JSON.stringify(txns))
       });
     });
   }
 
-  // Remove old keys
-  localStorage.removeItem('blue_ledger_history');
-  localStorage.removeItem('blue_ledger_days');
-  localStorage.removeItem('blue_ledger_today');
+  oldKeys.forEach(function(k){ localStorage.removeItem(k); });
   save();
 })();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
+function uid(){ return Date.now() + Math.random(); }
 function peso(n){ return '₱' + Number(n).toFixed(2); }
-
 function fmtKey(d){ return d.toISOString().slice(0,10); }
 function todayKey(){ return fmtKey(new Date()); }
-
-function save(){
-  localStorage.setItem('sl_history',    JSON.stringify(history));
-  localStorage.setItem('sl_closedDays', JSON.stringify(closedDays));
+function labelFromKey(key){
+  var d = new Date(key + 'T00:00:00');
+  return isNaN(d) ? key : d.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
-
-// ─── Derive daily groups from history ────────────────────────────────────
-// Returns array of { dayKey, dateLabel, transactions, total } for closed days only,
-// sorted newest first. Only includes days that still have at least one transaction.
-function getDailyGroups(){
-  const groups = {};
-  for(const txn of history){
-    const k = txn.dayKey || todayKey();
-    if(!closedDays.includes(k)) continue;
-    if(!groups[k]) groups[k] = { dayKey:k, dateLabel:txn.dayLabel || k, transactions:[], total:0 };
-    groups[k].transactions.push(txn);
-    groups[k].total += txn.total;
-  }
-  return Object.values(groups).sort((a,b) => b.dayKey.localeCompare(a.dayKey));
+function save(){
+  localStorage.setItem('sl2_history',    JSON.stringify(history));
+  localStorage.setItem('sl2_lockedDays', JSON.stringify(lockedDays));
 }
 
 // ─── Qty Stepper ──────────────────────────────────────────────────────────
 function changeQty(delta){
-  const el = document.getElementById('itemQty');
+  var el = document.getElementById('itemQty');
   el.textContent = Math.max(1, (parseInt(el.textContent) || 1) + delta);
 }
 
 // ─── Add Item ─────────────────────────────────────────────────────────────
 function addItem(){
-  const name  = document.getElementById('itemName').value.trim();
-  const price = parseFloat(document.getElementById('itemPrice').value);
-  const qty   = parseInt(document.getElementById('itemQty').textContent);
+  var name  = document.getElementById('itemName').value.trim();
+  var price = parseFloat(document.getElementById('itemPrice').value);
+  var qty   = parseInt(document.getElementById('itemQty').textContent);
   if(!name || isNaN(price) || qty < 1){ alert('Please complete all fields.'); return; }
-  currentSale.push({ name, price, qty });
+  currentSale.push({ name:name, price:price, qty:qty });
   document.getElementById('itemName').value  = '';
   document.getElementById('itemPrice').value = '';
   document.getElementById('itemQty').textContent = 1;
   renderSale();
 }
 
-// ─── Remove Item from current build ───────────────────────────────────────
 function removeItem(i){ currentSale.splice(i, 1); renderSale(); }
 
 // ─── Render Current Sale ──────────────────────────────────────────────────
 function renderSale(){
-  const wrap  = document.getElementById('saleList');
-  const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
+  var wrap  = document.getElementById('saleList');
+  var total = currentSale.reduce(function(a,b){ return a + b.price*b.qty; }, 0);
   document.getElementById('itemCount').textContent    = currentSale.length + ' items';
   document.getElementById('currentTotal').textContent = peso(total);
   if(!currentSale.length){
     wrap.innerHTML = '<div class="empty">Add items for this transaction. (..◜ᴗ◝..)</div>';
     return;
   }
-  wrap.innerHTML = currentSale.map((item, i) => `
-    <div class="sale-row">
-      <div class="sale-row-left">
-        <button class="btn-remove" onclick="removeItem(${i})">✕</button>
-        <div class="sale-info">
-          <h3>${item.name}</h3>
-          <p>${item.qty} × ${peso(item.price)}</p>
-        </div>
-      </div>
-      <div class="price">${peso(item.price * item.qty)}</div>
-    </div>
-  `).join('');
+  wrap.innerHTML = currentSale.map(function(item,i){ return (
+    '<div class="sale-row">' +
+      '<div class="sale-row-left">' +
+        '<button class="btn-remove" onclick="removeItem('+i+')">✕</button>' +
+        '<div class="sale-info">' +
+          '<h3>'+item.name+'</h3>' +
+          '<p>'+item.qty+' × '+peso(item.price)+'</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="price">'+peso(item.price*item.qty)+'</div>' +
+    '</div>'
+  ); }).join('');
 }
 
-// ─── Complete Sale (checkout) ─────────────────────────────────────────────
+// ─── Complete Sale ────────────────────────────────────────────────────────
 function checkout(){
   if(!currentSale.length){ alert('No items added yet.'); return; }
-  const now   = new Date();
-  const total = currentSale.reduce((a,b) => a + b.price * b.qty, 0);
-  const txn = {
-    id:       Date.now() + Math.random(),
+  var now   = new Date();
+  var total = currentSale.reduce(function(a,b){ return a + b.price*b.qty; }, 0);
+  history.unshift({
+    id:       uid(),
     date:     now.toLocaleString(),
     dayKey:   fmtKey(now),
-    dayLabel: now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' }),
-    total,
-    items: [...currentSale]
-  };
-  history.unshift(txn);
+    dayLabel: now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
+    total:    total,
+    items:    currentSale.slice()
+  });
   currentSale = [];
   save();
   renderAll();
 }
 
-// ─── Save & Close Day ─────────────────────────────────────────────────────
+// ─── Save & Close Day — permanently locks today into lockedDays ───────────
+// The snapshot is a deep copy stored in its own key.
+// clearHistory() and deleteHistorySale() do NOT touch lockedDays.
 function saveDay(){
   if(currentSale.length){
     if(!confirm('You have unsaved items. Complete this sale and save the day?')) return;
     checkout();
   }
-  const key = todayKey();
-  const todayTxns = history.filter(t => t.dayKey === key);
+  var key = todayKey();
+  var todayTxns = history.filter(function(t){ return t.dayKey === key; });
   if(!todayTxns.length){ alert('No sales today to save!'); return; }
-  if(closedDays.includes(key)){ alert('Today\'s records are already saved!'); return; }
-  closedDays.push(key);
+  if(lockedDays.find(function(d){ return d.dayKey === key; })){
+    alert("Today's records are already saved! ☽"); return;
+  }
+  lockedDays.unshift({
+    dayKey:       key,
+    dateLabel:    todayTxns[0].dayLabel || labelFromKey(key),
+    saved:        new Date().toLocaleString(),
+    total:        todayTxns.reduce(function(a,t){ return a+t.total; }, 0),
+    transactions: JSON.parse(JSON.stringify(todayTxns))   // deep copy — independent of history
+  });
   save();
   renderAll();
   alert('Day saved! ☽ Great work today.');
@@ -349,122 +377,109 @@ function saveDay(){
 
 // ─── Render All History ───────────────────────────────────────────────────
 function renderHistory(){
-  const wrap = document.getElementById('historyList');
+  var wrap = document.getElementById('historyList');
   if(!history.length){
     wrap.innerHTML = '<div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>';
     return;
   }
-  wrap.innerHTML = history.map((txn, i) => `
-    <div class="history-item">
-      <div class="history-top">
-        <span>${txn.date}</span>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="history-total">${peso(txn.total)}</span>
-          <button class="btn-delete-sale" onclick="deleteHistorySale(${i})" title="Delete this sale">✕</button>
-        </div>
-      </div>
-      ${txn.items.map(item => `
-        <div style="display:flex;justify-content:space-between;margin-top:6px;color:#6f8297;font-size:.88rem;">
-          <span>${item.name} × ${item.qty}</span>
-          <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+  wrap.innerHTML = history.map(function(txn,i){ return (
+    '<div class="history-item">' +
+      '<div class="history-top">' +
+        '<span>'+txn.date+'</span>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span class="history-total">'+peso(txn.total)+'</span>' +
+          '<button class="btn-delete-sale" onclick="deleteHistorySale('+i+')" title="Delete this sale">✕</button>' +
+        '</div>' +
+      '</div>' +
+      txn.items.map(function(item){ return (
+        '<div style="display:flex;justify-content:space-between;margin-top:6px;color:#6f8297;font-size:.88rem;">' +
+          '<span>'+item.name+' × '+item.qty+'</span>' +
+          '<span style="font-family:\'DM Mono\',monospace;">'+peso(item.price*item.qty)+'</span>' +
+        '</div>'
+      ); }).join('') +
+    '</div>'
+  ); }).join('');
 }
 
-// ─── Delete a Single Sale — permanently removes from history ──────────────
+// ─── Delete from history only — lockedDays are untouched ─────────────────
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
-  const deleted = history[i];
   history.splice(i, 1);
-
-  // If that day's key is closed but now has zero transactions, remove it from closedDays
-  // so it won't show as an empty daily record
-  const dayKey = deleted.dayKey;
-  if(closedDays.includes(dayKey)){
-    const remaining = history.filter(t => t.dayKey === dayKey);
-    if(remaining.length === 0){
-      closedDays = closedDays.filter(k => k !== dayKey);
-    }
-  }
-
   save();
   renderAll();
 }
 
-// ─── Render Daily Records (derived — never stale) ─────────────────────────
+// ─── Render Daily Records — reads from permanent lockedDays ───────────────
 function renderDaily(){
-  const wrap  = document.getElementById('dailyList');
-  const groups = getDailyGroups();
-  if(!groups.length){
+  var wrap = document.getElementById('dailyList');
+  if(!lockedDays.length){
     wrap.innerHTML = '<div class="empty">Save your day to create a daily record! ٩(^ᗜ^ )و ´-</div>';
     return;
   }
-  wrap.innerHTML = groups.map((day, di) => `
-    <div class="daily-record collapsed" id="day-${di}">
-      <div class="daily-record-head" onclick="toggleDay(${di})">
-        <span class="daily-record-date">${day.dateLabel}</span>
-        <div class="daily-record-meta">
-          <span class="daily-badge">${day.transactions.length} sale${day.transactions.length!==1?'s':''}</span>
-          <span class="daily-total">${peso(day.total)}</span>
-          <span class="collapse-icon">▾</span>
-        </div>
-      </div>
-      <div class="daily-transactions">
-        ${day.transactions.map(txn => `
-          <div class="daily-txn">
-            <div class="daily-txn-head">
-              <span>${txn.date}</span>
-              <span class="daily-txn-total">${peso(txn.total)}</span>
-            </div>
-            ${txn.items.map(item => `
-              <div style="display:flex;justify-content:space-between;margin-top:4px;color:#6f8297;font-size:.88rem;">
-                <span>${item.name} × ${item.qty}</span>
-                <span style="font-family:'DM Mono',monospace;">${peso(item.price * item.qty)}</span>
-              </div>
-            `).join('')}
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+  wrap.innerHTML = lockedDays.map(function(day,di){ return (
+    '<div class="daily-record collapsed" id="day-'+di+'">' +
+      '<div class="daily-record-head" onclick="toggleDay('+di+')">' +
+        '<span class="daily-record-date">'+day.dateLabel+'</span>' +
+        '<div class="daily-record-meta">' +
+          '<span class="daily-badge">'+day.transactions.length+' sale'+(day.transactions.length!==1?'s':'')+'</span>' +
+          '<span class="daily-total">'+peso(day.total)+'</span>' +
+          '<span class="locked-badge">locked ☽</span>' +
+          '<span class="collapse-icon">▾</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="daily-transactions">' +
+        day.transactions.map(function(txn){ return (
+          '<div class="daily-txn">' +
+            '<div class="daily-txn-head">' +
+              '<span>'+txn.date+'</span>' +
+              '<span class="daily-txn-total">'+peso(txn.total)+'</span>' +
+            '</div>' +
+            txn.items.map(function(item){ return (
+              '<div style="display:flex;justify-content:space-between;margin-top:4px;color:#6f8297;font-size:.88rem;">' +
+                '<span>'+item.name+' × '+item.qty+'</span>' +
+                '<span style="font-family:\'DM Mono\',monospace;">'+peso(item.price*item.qty)+'</span>' +
+              '</div>'
+            ); }).join('') +
+          '</div>'
+        ); }).join('') +
+      '</div>' +
+    '</div>'
+  ); }).join('');
 }
 
 function toggleDay(di){
-  document.getElementById('day-' + di).classList.toggle('collapsed');
+  document.getElementById('day-'+di).classList.toggle('collapsed');
 }
 
 // ─── Overall Stats ────────────────────────────────────────────────────────
 function renderOverall(){
-  document.getElementById('overallRevenue').textContent = peso(history.reduce((a,b) => a + b.total, 0));
+  document.getElementById('overallRevenue').textContent = peso(history.reduce(function(a,b){ return a+b.total; },0));
   document.getElementById('overallTxns').textContent    = history.length;
 }
 
 // ─── Clear Actions ────────────────────────────────────────────────────────
 function clearHistory(){
   if(!history.length){ alert('Nothing to clear!'); return; }
-  if(!confirm('Clear ALL sales history? This cannot be undone.')) return;
-  history    = [];
-  closedDays = [];
+  if(!confirm('Clear ALL sales history?\n\nYour saved daily records will NOT be affected — they are permanently locked.')) return;
+  history = [];
   save();
   renderAll();
 }
 
 function clearDays(){
-  if(!closedDays.length){ alert('No daily records to clear!'); return; }
-  if(!confirm('Clear all daily records? Sales history will remain. This cannot be undone.')) return;
-  closedDays = [];
+  if(!lockedDays.length){ alert('No daily records to clear!'); return; }
+  if(!confirm('Clear all daily records? This cannot be undone.')) return;
+  lockedDays = [];
   save();
   renderDaily();
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────
 function switchTab(name){
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
 }
 
 // ─── Render Everything ────────────────────────────────────────────────────
@@ -475,7 +490,6 @@ function renderAll(){
   renderOverall();
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────
 renderAll();
 </script>
 </body>
