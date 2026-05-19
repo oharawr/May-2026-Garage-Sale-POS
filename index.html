@@ -217,25 +217,24 @@ button{ border:none; cursor:pointer; border-radius:14px; transition:.18s; }
 function peso(n){ return '₱' + Number(n).toFixed(2); }
 
 function save(){
-  localStorage.setItem('blue_ledger_history', JSON.stringify(history));
+  localStorage.setItem('blue_ledger_history', JSON.stringify(salesHistory));
   localStorage.setItem('blue_ledger_today',   JSON.stringify(todaySales));
   localStorage.setItem('blue_ledger_days',    JSON.stringify(dailyDays));
 }
 
 // ─── State ────────────────────────────────────────────────────────────────
-let currentSale = [];
-let history    = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
-let todaySales = JSON.parse(localStorage.getItem('blue_ledger_today')   || '[]');
-let dailyDays  = JSON.parse(localStorage.getItem('blue_ledger_days')    || '[]');
+let currentSale  = [];
+let salesHistory = JSON.parse(localStorage.getItem('blue_ledger_history') || '[]');
+let todaySales   = JSON.parse(localStorage.getItem('blue_ledger_today')   || '[]');
+let dailyDays    = JSON.parse(localStorage.getItem('blue_ledger_days')    || '[]');
 
 // Ensure every transaction has a stable id (one-time migration)
 let _migrated = false;
 function ensureId(txn){
   if(!txn.id){ txn.id = Date.now() + Math.random(); _migrated = true; }
 }
-history.forEach(ensureId);
+salesHistory.forEach(ensureId);
 todaySales.forEach(ensureId);
-// dailyDays are locked snapshots — we still ensure ids so matching works
 dailyDays.forEach(day => day.transactions.forEach(ensureId));
 if(_migrated) save();
 
@@ -295,7 +294,7 @@ function checkout(){
     total,
     items: [...currentSale]
   };
-  history.unshift(txn);
+  salesHistory.unshift(txn);
   todaySales.push(txn);
   currentSale = [];
   save();
@@ -306,8 +305,6 @@ function checkout(){
 }
 
 // ─── Save & Close Day ─────────────────────────────────────────────────────
-// Stores a deep-copy snapshot into dailyDays — completely independent of
-// history and todaySales. Survives any future clearHistory() calls.
 function saveDay(){
   if(currentSale.length){
     if(!confirm('You have unsaved items. Complete this sale and save the day?')) return;
@@ -318,7 +315,6 @@ function saveDay(){
   const dateLabel = new Date().toLocaleDateString('en-PH', {
     weekday:'long', year:'numeric', month:'long', day:'numeric'
   });
-  // Deep-copy so the snapshot is never affected by later edits/deletes
   dailyDays.unshift({
     date:         dateLabel,
     saved:        new Date().toLocaleString(),
@@ -378,11 +374,11 @@ function toggleDay(di){
 // ─── Render All History ───────────────────────────────────────────────────
 function renderHistory(){
   const wrap = document.getElementById('historyList');
-  if(!history.length){
+  if(!salesHistory.length){
     wrap.innerHTML = '<div class="empty">Your completed sales will appear here! ٩(^ᗜ^ )و ´-</div>';
     return;
   }
-  wrap.innerHTML = history.map((txn, i) => `
+  wrap.innerHTML = salesHistory.map((txn, i) => `
     <div class="history-item">
       <div class="history-top">
         <span>${txn.date}</span>
@@ -402,17 +398,12 @@ function renderHistory(){
 }
 
 // ─── Delete Single Sale ───────────────────────────────────────────────────
-// Removes from history and todaySales only.
-// dailyDays are locked snapshots — they are NOT modified here.
 function deleteHistorySale(i){
   if(!confirm('Delete this sale record? This cannot be undone.')) return;
-  const deleted = history[i];
-  history.splice(i, 1);
-
-  // Also remove from todaySales if it hasn't been saved into a day yet
+  const deleted = salesHistory[i];
+  salesHistory.splice(i, 1);
   const todayIdx = todaySales.findIndex(t => t.id === deleted.id);
   if(todayIdx !== -1) todaySales.splice(todayIdx, 1);
-
   save();
   renderHistory();
   renderDaily();
@@ -421,18 +412,17 @@ function deleteHistorySale(i){
 
 // ─── Overall Stats ────────────────────────────────────────────────────────
 function renderOverall(){
-  const revenue = history.reduce((a,b) => a + b.total, 0);
+  const revenue = salesHistory.reduce((a,b) => a + b.total, 0);
   document.getElementById('overallRevenue').textContent = peso(revenue);
-  document.getElementById('overallTxns').textContent    = history.length;
+  document.getElementById('overallTxns').textContent    = salesHistory.length;
 }
 
 // ─── Clear Actions ────────────────────────────────────────────────────────
-// clearHistory wipes history + todaySales but NOT dailyDays (they are locked).
 function clearHistory(){
-  if(!history.length){ alert('Nothing to clear!'); return; }
+  if(!salesHistory.length){ alert('Nothing to clear!'); return; }
   if(!confirm('Clear ALL sales history?\n\nNote: your saved daily records are locked and will NOT be affected.')) return;
-  history    = [];
-  todaySales = [];
+  salesHistory = [];
+  todaySales   = [];
   save();
   renderSale();
   renderHistory();
